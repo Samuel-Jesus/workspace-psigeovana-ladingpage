@@ -1,0 +1,134 @@
+/* ═══════════════════════════════════════
+   LETTER BACKDROP
+   Glifos do nome ampliados como forma de fundo.
+
+   Regra de composição: os glifos entram sempre pelas
+   laterais, na altura do bojo — é onde Playfair Display
+   tem os traços grossos, que geram arcos largos.
+   Entrar por cima ou por baixo revelaria apenas as
+   hastes finas e as serifas, virando cunhas soltas.
+
+   Offsets em `em` para acompanharem o próprio font-size.
+═══════════════════════════════════════ */
+.letter-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  --zoom: 1;
+}
+
+.letter-backdrop__glyph {
+  position: absolute;
+  top: 50%;
+  left: var(--left, auto);
+  right: var(--right, auto);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: calc(var(--size) * var(--zoom));
+  line-height: 0.72;
+  color: var(--ink);
+  transform: translateY(-50%) translateY(var(--dy, 0em)) rotate(var(--rot, 0deg));
+}
+
+/* Sobre fundo claro (areia) — véu de lavanda */
+.letter-backdrop--light {
+  --ink: rgba(107, 74, 140, 0.1);
+}
+
+/* Sobre fundo escuro (plum) — véu de luz */
+.letter-backdrop--dark {
+  --ink: rgba(205, 188, 224, 0.075);
+}
+
+/* ── Hero: texto à esquerda, foto à direita ──
+   Glifos afastados do bloco de texto. */
+.letter-backdrop--hero .letter-backdrop__glyph--1 {
+  --size: 64rem;
+  --left: -0.34em;
+  --dy: 0.3em;
+  --rot: -5deg;
+}
+
+.letter-backdrop--hero .letter-backdrop__glyph--2 {
+  --size: 58rem;
+  --right: -0.3em;
+  --dy: -0.26em;
+  --rot: 6deg;
+}
+
+/* ── About: citação ao centro, foto à esquerda ── */
+.letter-backdrop--about .letter-backdrop__glyph--1 {
+  --size: 70rem;
+  --right: -0.33em;
+  --dy: -0.2em;
+  --rot: 8deg;
+}
+
+.letter-backdrop--about .letter-backdrop__glyph--2 {
+  --size: 56rem;
+  --left: -0.26em;
+  --dy: 0.28em;
+  --rot: -8deg;
+}
+
+/* ── Themes: cabeçalho à esquerda, grade na largura ── */
+.letter-backdrop--themes .letter-backdrop__glyph--1 {
+  --size: 62rem;
+  --left: -0.31em;
+  --dy: -0.24em;
+  --rot: -6deg;
+}
+
+.letter-backdrop--themes .letter-backdrop__glyph--2 {
+  --size: 66rem;
+  --right: -0.32em;
+  --dy: 0.24em;
+  --rot: 7deg;
+}
+
+/* ── Services: cabeçalho à esquerda, dois cartões ── */
+.letter-backdrop--services .letter-backdrop__glyph--1 {
+  --size: 58rem;
+  --right: -0.29em;
+  --dy: -0.26em;
+  --rot: 9deg;
+}
+
+.letter-backdrop--services .letter-backdrop__glyph--2 {
+  --size: 68rem;
+  --left: -0.33em;
+  --dy: 0.26em;
+  --rot: -7deg;
+}
+
+/* ── Contact: conteúdo ao centro, laterais livres ── */
+.letter-backdrop--contact .letter-backdrop__glyph--1 {
+  --size: 60rem;
+  --left: -0.3em;
+  --dy: -0.1em;
+  --rot: -6deg;
+}
+
+.letter-backdrop--contact .letter-backdrop__glyph--2 {
+  --size: 60rem;
+  --right: -0.3em;
+  --dy: 0.14em;
+  --rot: 6deg;
+}
+
+/* ── Responsivo: só a escala muda, a composição se mantém ── */
+@media (max-width: 1100px) {
+  .letter-backdrop {
+    --zoom: 0.72;
+  }
+}
+
+@media (max-width: 720px) {
+  .letter-backdrop {
+    --zoom: 0.46;
+  }
+}

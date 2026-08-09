@@ -3,22 +3,22 @@
 ═══════════════════════════════════════ */
 .hero {
   position: relative;
-  min-height: 100svh;
+  min-height: min(100svh, 820px);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: clamp(5rem, 10vh, 7rem) 1.5rem clamp(3rem, 6vh, 5rem);
-  background: var(--cream);
+  padding: clamp(3.5rem, 7vh, 5rem) 1.5rem clamp(2rem, 4vh, 3rem);
+  background: #efdfbe;
   overflow: hidden;
 }
 
-/* Textura de ruído muito sutil */
 .hero__noise {
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.35;
   pointer-events: none;
+  z-index: 0;
 }
 
 /* ── Layout ── */
@@ -28,251 +28,93 @@
   width: var(--container);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(2rem, 5vw, 5rem);
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: clamp(2rem, 5vw, 4.5rem);
   align-items: center;
 }
 
-/* ── Conteúdo esquerdo ── */
+/* ── Conteúdo ── */
 .hero__content {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
 
-.hero__eyebrow {
-  margin-bottom: 1.5rem;
+.hero__greeting {
+  font-size: clamp(1.35rem, 2.8vw, 1.85rem);
+  font-weight: 400;
+  font-style: italic;
+  color: var(--tinta);
+  line-height: 1.35;
+  margin-bottom: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+.hero__greeting-line {
+  display: block;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 0.92em;
+  opacity: 0.88;
 }
 
 .hero__title {
-  font-size: clamp(3.25rem, 7.5vw, 5.75rem);
+  font-size: clamp(3.5rem, 9vw, 6.5rem);
   color: var(--tinta);
-  margin-bottom: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  text-transform: lowercase;
+  margin-bottom: clamp(1.25rem, 3vw, 1.75rem);
 }
 
 .hero__title-italic {
   display: block;
   font-style: italic;
   font-weight: 400;
-  color: var(--lavanda-400);
-  margin-left: clamp(1rem, 3vw, 3rem);
-}
-
-.hero__lead {
-  font-size: clamp(1rem, 1.8vw, 1.125rem);
-  font-weight: 300;
-  color: var(--text-body);
-  line-height: 1.8;
-  max-width: 460px;
-  margin-bottom: 1.75rem;
-}
-
-/* Pills de credencial */
-.hero__pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 2.25rem;
-}
-
-.hero__pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 0.78rem;
-  font-weight: 400;
-  color: var(--tinta);
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(173, 144, 199, 0.3);
-  padding: 0.45rem 0.9rem;
-  border-radius: var(--radius-full);
-  backdrop-filter: blur(4px);
-}
-
-.hero__pill svg {
-  color: var(--lavanda-400);
-  font-size: 0.72rem;
-}
-
-/* Botões */
-.hero__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.875rem;
-}
-
-.hero__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.65rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  padding: 0.95rem 1.75rem;
-  border-radius: var(--radius-full);
-  transition: transform 0.35s var(--ease), box-shadow 0.35s, background 0.3s, border-color 0.3s;
-  letter-spacing: 0.01em;
-}
-
-.hero__btn-arrow {
-  font-size: 0.75rem;
-  transition: transform 0.35s var(--ease);
-}
-
-.hero__btn--primary {
-  background: var(--plum-100);
-  color: var(--white);
-  box-shadow: var(--shadow-sm);
-}
-
-.hero__btn--primary:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.hero__btn--primary:hover .hero__btn-arrow {
-  transform: translateX(4px);
-}
-
-.hero__btn--ghost {
-  background: transparent;
-  color: var(--tinta);
-  border: 1.5px solid rgba(51, 25, 60, 0.15);
-}
-
-.hero__btn--ghost:hover {
-  background: rgba(255, 255, 255, 0.7);
-  border-color: rgba(107, 74, 140, 0.25);
-}
-
-/* ── Visual decorativo (direita) ── */
-.hero__visual {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: clamp(320px, 45vw, 560px);
-}
-
-/* Orb central */
-.hero__orb {
-  position: relative;
-  width: clamp(240px, 32vw, 420px);
-  height: clamp(240px, 32vw, 420px);
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 40% 40%,
-    rgba(205, 188, 224, 0.32) 0%,
-    rgba(173, 144, 199, 0.12) 45%,
-    rgba(173, 144, 199, 0.03) 70%,
-    transparent 85%
-  );
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 80px rgba(140, 103, 172, 0.12);
-}
-
-/* Ícone cérebro dentro do orb */
-.hero__orb-brain {
-  font-size: clamp(120px, 17vw, 230px);
   color: var(--lavanda-300);
-  opacity: 0.14;
+  letter-spacing: -0.015em;
 }
 
-/* Anéis orbitais */
-.hero__orb-ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.hero__orb-ring--1 {
-  width: 122%;
-  height: 122%;
-  border: 1px dashed rgba(173, 144, 199, 0.22);
-  animation: ring-rotate 28s linear infinite;
-  transform-origin: center;
-}
-
-.hero__orb-ring--2 {
-  width: 145%;
-  height: 145%;
-  border: 1px solid rgba(205, 188, 224, 0.1);
-  animation: ring-rotate-reverse 45s linear infinite;
-  transform-origin: center;
-}
-
-/* Pontos flutuantes ao redor do orb */
-.hero__dot {
-  position: absolute;
-  border-radius: 50%;
-  display: block;
-}
-
-.hero__dot--a {
-  width: 13px;
-  height: 13px;
-  background: var(--lavanda-200);
-  opacity: 0.55;
-  top: 10%;
-  right: 14%;
-}
-
-.hero__dot--b {
-  width: 8px;
-  height: 8px;
-  background: var(--areia-200);
-  opacity: 0.6;
-  bottom: 18%;
-  left: 10%;
-}
-
-.hero__dot--c {
-  width: 6px;
-  height: 6px;
-  background: var(--lavanda-300);
-  opacity: 0.4;
-  top: 38%;
-  left: 6%;
-}
-
-/* Mini cartão flutuante */
-.hero__card {
-  position: absolute;
-  bottom: 10%;
-  right: 4%;
+.hero__creds {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 1.125rem;
-  background: var(--white);
-  border: 1px solid rgba(205, 188, 224, 0.4);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  backdrop-filter: blur(8px);
-  min-width: 170px;
-}
-
-.hero__card-icon {
-  font-size: 1.1rem;
-  color: var(--lavanda-400);
-  flex-shrink: 0;
-}
-
-.hero__card-title {
-  font-size: 0.8125rem;
-  font-weight: 600;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem 1.5rem;
+  font-family: var(--font-display);
   color: var(--tinta);
-  line-height: 1;
 }
 
-.hero__card-sub {
-  font-size: 0.7rem;
-  color: var(--text-body);
-  margin-top: 0.2rem;
+.hero__role {
+  font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+  font-style: italic;
+  font-weight: 500;
+}
+
+.hero__crp {
+  font-size: clamp(0.8rem, 1.3vw, 0.9rem);
+  font-weight: 500;
+  font-style: normal;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+}
+
+/* ── Foto ── */
+.hero__photo {
+  margin: 0;
+  justify-self: end;
+  width: min(100%, 380px);
+  aspect-ratio: 3 / 4.2;
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: 0 28px 64px rgba(51, 25, 60, 0.18);
+}
+
+.hero__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+  display: block;
 }
 
 /* Indicador de scroll */
@@ -298,50 +140,47 @@
 
 /* ── Responsivo ── */
 @media (max-width: 860px) {
+  .hero {
+    min-height: auto;
+    padding-top: clamp(5rem, 12vw, 6rem);
+  }
+
   .hero__inner {
     grid-template-columns: 1fr;
-    gap: 3rem;
+    gap: 2.5rem;
+    text-align: center;
   }
 
   .hero__content {
     align-items: center;
-    text-align: center;
+    order: 1;
   }
 
-  .hero__title-italic {
-    margin-left: 0;
+  .hero__photo {
+    justify-self: center;
+    order: 0;
+    width: min(72vw, 280px);
   }
 
-  .hero__lead {
-    text-align: center;
-  }
-
-  .hero__pills {
+  .hero__creds {
     justify-content: center;
-  }
-
-  .hero__actions {
-    justify-content: center;
-  }
-
-  .hero__visual {
-    height: clamp(260px, 60vw, 380px);
-    order: -1;
-  }
-
-  .hero__card {
-    bottom: 0;
-    right: 5%;
   }
 }
 
 @media (max-width: 480px) {
-  .hero__actions {
-    flex-direction: column;
-    width: 100%;
+  .hero__title {
+    font-size: clamp(3rem, 16vw, 3.75rem);
   }
 
-  .hero__btn {
-    justify-content: center;
+  .hero__creds {
+    flex-direction: column;
+    gap: 0.35rem;
+    align-items: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__scroll-line {
+    animation: none;
   }
 }

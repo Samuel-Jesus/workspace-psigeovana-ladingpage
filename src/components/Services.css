@@ -2,18 +2,22 @@
    SERVICES
 ═══════════════════════════════════════ */
 .services {
+  position: relative;
   padding: var(--section-v) 1.5rem;
-  background: var(--cream);
+  background: #efdfbe;
+  overflow: hidden;
 }
 
 .services__inner {
+  position: relative;
+  z-index: 1;
   width: var(--container);
   margin: 0 auto;
 }
 
 /* Cabeçalho */
 .services__header {
-  margin-bottom: clamp(3rem, 6vw, 4.5rem);
+  margin-bottom: clamp(1.75rem, 3.5vw, 2.75rem);
   max-width: 580px;
 }
 
@@ -46,8 +50,7 @@
 /* ── Cartão base ── */
 .services__card {
   position: relative;
-  background: var(--white);
-  border: 1px solid rgba(205, 188, 224, 0.28);
+  border: none;
   border-radius: var(--radius-lg);
   padding: 2.25rem 2rem;
   overflow: hidden;
@@ -60,10 +63,14 @@
   box-shadow: var(--shadow-lg);
 }
 
-/* ── Cartão destaque (primary) ── */
-.services__card--featured {
-  background: linear-gradient(145deg, var(--plum-100) 0%, #4a2655 100%);
-  border-color: transparent;
+/* Card 1 — lilás médio */
+.services__card--lavender {
+  background: #915eae;
+}
+
+/* Card 2 — roxo escuro */
+.services__card--plum {
+  background: #39213b;
 }
 
 /* Número decorativo de fundo */
@@ -75,15 +82,17 @@
   font-size: clamp(4.5rem, 8vw, 7rem);
   font-weight: 600;
   line-height: 1;
-  color: var(--lavanda-400);
-  opacity: 0.08;
   pointer-events: none;
   user-select: none;
 }
 
-.services__card--featured .services__card-num {
-  color: var(--lavanda-100);
-  opacity: 0.1;
+.services__card--lavender .services__card-num {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.services__card--plum .services__card-num {
+  color: #7d6c84;
+  opacity: 0.55;
 }
 
 /* Ícone */
@@ -93,51 +102,46 @@
   justify-content: center;
   width: 50px;
   height: 50px;
-  border-radius: var(--radius-sm);
+  border-radius: 50%;
   margin-bottom: 1.375rem;
 }
 
-.services__card .services__card-icon-wrap {
-  background: rgba(107, 74, 140, 0.1);
+.services__card--lavender .services__card-icon-wrap {
+  background: #4b365f;
 }
 
-.services__card--featured .services__card-icon-wrap {
-  background: rgba(255, 255, 255, 0.12);
+.services__card--plum .services__card-icon-wrap {
+  background: #7d6c84;
 }
 
 .services__card-icon {
   font-size: 1.25rem;
-  color: var(--lavanda-400);
 }
 
-.services__card--featured .services__card-icon {
-  color: var(--lavanda-100);
+.services__card--lavender .services__card-icon {
+  color: #cdbce0;
+}
+
+.services__card--plum .services__card-icon {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* Título */
 .services__card-title {
   font-size: clamp(1.25rem, 2.5vw, 1.5rem);
   font-weight: 500;
-  color: var(--tinta);
+  color: var(--white);
   margin-bottom: 0.875rem;
   line-height: 1.25;
-}
-
-.services__card--featured .services__card-title {
-  color: var(--white);
 }
 
 /* Descrição */
 .services__card-desc {
   font-size: 0.9375rem;
   font-weight: 300;
-  color: var(--text-body);
+  color: rgba(255, 255, 255, 0.88);
   line-height: 1.78;
   margin-bottom: 1.625rem;
-}
-
-.services__card--featured .services__card-desc {
-  color: rgba(255, 255, 255, 0.72);
 }
 
 /* Lista de features */
@@ -146,12 +150,8 @@
   flex-direction: column;
   gap: 0.625rem;
   padding-top: 1.25rem;
-  border-top: 1px solid rgba(205, 188, 224, 0.25);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
   margin-bottom: 1.75rem;
-}
-
-.services__card--featured .services__card-list {
-  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .services__card-list li {
@@ -160,21 +160,20 @@
   gap: 0.625rem;
   font-size: 0.8125rem;
   font-weight: 400;
-  color: var(--areia-300);
-}
-
-.services__card--featured .services__card-list li {
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .services__card-list li svg {
   font-size: 0.6rem;
   flex-shrink: 0;
-  color: var(--lavanda-400);
 }
 
-.services__card--featured .services__card-list li svg {
-  color: var(--lavanda-100);
+.services__card--lavender .services__card-list li svg {
+  color: var(--white);
+}
+
+.services__card--plum .services__card-list li svg {
+  color: #7d6c84;
 }
 
 /* CTA do cartão */
@@ -184,26 +183,32 @@
   gap: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--lavanda-400);
-  border-bottom: 1px solid rgba(107, 74, 140, 0.3);
   padding-bottom: 0.15rem;
   transition: color 0.3s, gap 0.3s, border-color 0.3s;
 }
 
-.services__card--featured .services__card-cta {
-  color: var(--areia-100);
-  border-color: rgba(239, 222, 203, 0.35);
+.services__card--lavender .services__card-cta {
+  color: #4b365f;
+  border-bottom: 1px solid rgba(75, 54, 95, 0.35);
+}
+
+.services__card--plum .services__card-cta {
+  color: #8e6f9f;
+  border-bottom: 1px solid rgba(142, 111, 159, 0.4);
 }
 
 .services__card-cta:hover {
   gap: 0.75rem;
-  color: var(--lavanda-300);
-  border-color: rgba(107, 74, 140, 0.5);
 }
 
-.services__card--featured .services__card-cta:hover {
-  color: var(--white);
-  border-color: rgba(255, 255, 255, 0.5);
+.services__card--lavender .services__card-cta:hover {
+  color: #33193c;
+  border-color: rgba(51, 25, 60, 0.55);
+}
+
+.services__card--plum .services__card-cta:hover {
+  color: var(--lavanda-100);
+  border-color: rgba(205, 188, 224, 0.5);
 }
 
 .services__card-cta svg {

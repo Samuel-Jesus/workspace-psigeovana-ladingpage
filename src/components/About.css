@@ -3,7 +3,7 @@
 ═══════════════════════════════════════ */
 .about {
   position: relative;
-  background: var(--plum-200);
+  background: #39213b;
   overflow: hidden;
 }
 
@@ -22,13 +22,16 @@
     rgba(205, 188, 224, 0.3) 70%,
     transparent 100%
   );
+  z-index: 1;
 }
 
 /* ── Pull-quote ── */
 .about__quote-wrap {
+  position: relative;
+  z-index: 1;
   width: var(--container);
   margin: 0 auto;
-  padding: var(--section-v) 0 clamp(3rem, 6vw, 4.5rem);
+  padding: clamp(2.5rem, 5vw, 3.5rem) 0 clamp(1.75rem, 3.5vw, 2.5rem);
   text-align: center;
 }
 
@@ -39,7 +42,7 @@
   color: var(--text-on-dark);
   line-height: 1.45;
   max-width: 720px;
-  margin: 0 auto 2rem;
+  margin: 0 auto 1.25rem;
   opacity: 0.85;
 }
 
@@ -54,18 +57,41 @@
 
 /* ── Conteúdo principal ── */
 .about__inner {
+  position: relative;
+  z-index: 1;
   width: var(--container);
   margin: 0 auto;
-  padding-bottom: var(--section-v);
+  padding-bottom: clamp(2rem, 4vw, 3rem);
 }
 
-/* Grid 2 colunas: label/título | texto */
+/* Grid: foto | conteúdo */
 .about__layout {
   display: grid;
-  grid-template-columns: 1fr 1.35fr;
-  gap: clamp(2.5rem, 6vw, 5rem);
-  align-items: start;
-  margin-bottom: clamp(3.5rem, 7vw, 5rem);
+  grid-template-columns: minmax(240px, 0.9fr) 1.2fr;
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: center;
+  margin-bottom: clamp(2.25rem, 4.5vw, 3.25rem);
+}
+
+.about__photo {
+  margin: 0;
+  position: relative;
+}
+
+.about__photo img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  display: block;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.28);
+}
+
+.about__content {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.5rem, 3vw, 2rem);
 }
 
 .about__intro {
@@ -97,7 +123,7 @@
 
 .about__text strong {
   font-weight: 500;
-  color: var(--white);
+  color: var(--lavanda-100);
 }
 
 .about__cta {
@@ -125,7 +151,7 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 1.25rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  padding-top: clamp(2.5rem, 5vw, 3.5rem);
+  padding-top: clamp(1.75rem, 3.5vw, 2.5rem);
 }
 
 .about__pillar {
@@ -178,7 +204,12 @@
 @media (max-width: 860px) {
   .about__layout {
     grid-template-columns: 1fr;
-    gap: 2.5rem;
+    gap: 2.25rem;
+  }
+
+  .about__photo {
+    max-width: 320px;
+    margin: 0 auto;
   }
 
   .about__pillars {

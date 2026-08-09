@@ -1,0 +1,29 @@
+/* ═══════════════════════════════════════
+   WAVE DIVIDER — transição entre seções
+═══════════════════════════════════════ */
+.wave {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+  position: relative;
+  margin-bottom: -1px;
+}
+
+.wave__svg {
+  display: block;
+  width: 100%;
+  height: clamp(88px, 10vw, 140px);
+}
+
+.wave--descend .wave__svg {
+  height: clamp(96px, 11vw, 148px);
+}
+
+.wave--ascend .wave__svg {
+  height: clamp(90px, 10.5vw, 140px);
+}
+
+.wave--ribbon .wave__svg {
+  height: clamp(80px, 9vw, 120px);
+}

@@ -4,24 +4,8 @@
 .contact {
   position: relative;
   padding: var(--section-v) 1.5rem;
-  background: var(--plum-100);
+  background: #39213b;
   overflow: hidden;
-}
-
-/* Brilho de fundo */
-.contact__glow {
-  position: absolute;
-  bottom: -20%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60%;
-  height: 50%;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(140, 103, 172, 0.2) 0%,
-    transparent 70%
-  );
-  pointer-events: none;
 }
 
 .contact__inner {
@@ -38,7 +22,7 @@
 
 /* ── Cabeçalho ── */
 .contact__header {
-  margin-bottom: 2.75rem;
+  margin-bottom: 1.75rem;
 }
 
 .contact__tag {
