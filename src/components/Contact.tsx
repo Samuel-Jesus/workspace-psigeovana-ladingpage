@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEnvelope, faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { faWhatsapp, faInstagram } from '@fortawesome/free-brands-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { LetterBackdrop } from './LetterBackdrop'
 import './Contact.css'
 
 const ease = [0.22, 1, 0.36, 1] as const
@@ -20,8 +21,8 @@ const contacts: ContactItem[] = [
   {
     icon: faWhatsapp,
     label: 'WhatsApp',
-    value: '(71) 99999-9999',
-    href: 'https://wa.me/5571999999999',
+    value: '(71) 98652-6347',
+    href: 'https://wa.me/5571986526347',
     external: true,
   },
   {
@@ -51,16 +52,15 @@ export function Contact() {
 
   return (
     <section id="contato" className="contact" ref={ref}>
-      {/* Decoração de fundo */}
-      <div className="contact__glow" aria-hidden="true" />
+      <LetterBackdrop variant="contact" tone="dark" />
 
       <div className="contact__inner">
         {/* Cabeçalho */}
         <motion.div className="contact__header" {...animate(0)}>
           <span className="tag tag--dark contact__tag">Contato</span>
           <h2 className="contact__title display">
-            Pronto para dar<br />
-            <em>o primeiro passo?</em>
+            Como posso<br />
+            <em>te ajudar?</em>
           </h2>
           <p className="contact__subtitle">
             Entre em contato para agendar sua consulta ou tirar dúvidas
@@ -70,7 +70,7 @@ export function Contact() {
 
         {/* CTA principal */}
         <motion.a
-          href="https://wa.me/5571999999999"
+          href="https://wa.me/5571986526347"
           className="contact__cta-main"
           target="_blank"
           rel="noopener noreferrer"
@@ -79,7 +79,7 @@ export function Contact() {
           <FontAwesomeIcon icon={faWhatsapp} className="contact__cta-main-icon" />
           <span>
             <strong>Agendar pelo WhatsApp</strong>
-            <small>(71) 99999-9999</small>
+            <small>(71) 98652-6347</small>
           </span>
           <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="contact__cta-main-ext" />
         </motion.a>

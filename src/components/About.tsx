@@ -3,6 +3,7 @@ import { motion, useInView } from 'framer-motion'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHeart, faAtom, faWifi } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { LetterBackdrop } from './LetterBackdrop'
 import './About.css'
 
 const ease = [0.22, 1, 0.36, 1] as const
@@ -37,10 +38,9 @@ export function About() {
 
   return (
     <section id="sobre" className="about" ref={ref}>
-      {/* Linha luminosa no topo */}
+      <LetterBackdrop variant="about" tone="dark" />
       <div className="about__topline" aria-hidden="true" />
 
-      {/* Pull-quote de abertura */}
       <div className="about__quote-wrap">
         <motion.blockquote className="about__quote display" {...animate(0)}>
           "O primeiro passo é a coragem de se conhecer."
@@ -48,48 +48,49 @@ export function About() {
         <motion.div className="about__quote-line" {...animate(0.15)} aria-hidden="true" />
       </div>
 
-      {/* Conteúdo principal */}
       <div className="about__inner">
         <div className="about__layout">
-          {/* Esquerda: label + título */}
-          <motion.div className="about__intro" {...animate(0.1)}>
-            <span className="tag tag--dark">Sobre mim</span>
-            <h2 className="about__title display">
-              Cuidado acolhedor,<br />ético e estruturado
-            </h2>
-          </motion.div>
+          <motion.figure className="about__photo" {...animate(0.1)}>
+            <img
+              src="/images/geovana-leitura.png"
+              alt="Geovana Almeida lendo um livro"
+              width={768}
+              height={1024}
+              loading="lazy"
+            />
+          </motion.figure>
 
-          {/* Direita: textos */}
-          <motion.div className="about__text" {...animate(0.2)}>
-            <p>
-              Sou psicóloga e utilizo a{' '}
-              <strong>Terapia Cognitivo-Comportamental (TCC)</strong> como
-              abordagem terapêutica - um método baseado em evidências
-              científicas, reconhecido mundialmente por sua eficácia.
-            </p>
-            <p>
-              Atendo pela minha <strong>clínica online</strong>, onde realizo
-              consultas por videochamada em um ambiente seguro e confidencial.
-            </p>
-            <p>
-              Meu trabalho auxilia você a compreender seus padrões de
-              pensamento e comportamento, desenvolver estratégias de
-              enfrentamento e construir mudanças que promovam mais equilíbrio
-              e qualidade de vida.
-            </p>
-            <a href="#contato" className="about__cta">
-              Agendar minha consulta
-            </a>
-          </motion.div>
+          <div className="about__content">
+            <motion.div className="about__intro" {...animate(0.18)}>
+              <span className="tag tag--dark">Sobre mim</span>
+              <h2 className="about__title display">
+                Cuidado acolhedor,<br />ético e estruturado
+              </h2>
+            </motion.div>
+
+            <motion.div className="about__text" {...animate(0.26)}>
+              <p>
+                Sou psicóloga e atuo de forma{' '}
+                <strong>100% on-line</strong>, utilizando a{' '}
+                <strong>Terapia Cognitivo-Comportamental (TCC)</strong>, uma
+                abordagem baseada em evidências científicas. Atendo{' '}
+                <strong>jovens adultas</strong> (+18) que enfrentam questões
+                relacionadas à ansiedade, autoestima, relacionamentos e outras
+                demandas emocionais.
+              </p>
+              <a href="#contato" className="about__cta">
+                Agendar minha consulta
+              </a>
+            </motion.div>
+          </div>
         </div>
 
-        {/* Pilares */}
         <div className="about__pillars">
           {pillars.map((p, i) => (
             <motion.div
               key={p.title}
               className="about__pillar"
-              {...animate(0.28 + i * 0.1)}
+              {...animate(0.32 + i * 0.1)}
             >
               <div className="about__pillar-icon">
                 <FontAwesomeIcon icon={p.icon} />

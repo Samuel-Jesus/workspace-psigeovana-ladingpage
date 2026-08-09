@@ -28,7 +28,7 @@ export function Footer() {
             <FontAwesomeIcon icon={faInstagram} />
           </a>
           <a
-            href="https://wa.me/5571999999999"
+            href="https://wa.me/5571986526347"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="WhatsApp"

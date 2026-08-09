@@ -52,7 +52,7 @@
 
   /* Layout */
   --container: min(1100px, calc(100% - 3rem));
-  --section-v: clamp(5.5rem, 11vw, 8rem);
+  --section-v: clamp(3.25rem, 6.5vw, 4.75rem);
 }
 
 *,
@@ -146,18 +146,6 @@ ul {
   letter-spacing: -0.01em;
 }
 
-/* ── Divider wave ── */
-.wave {
-  display: block;
-  width: 100%;
-  overflow: hidden;
-  line-height: 0;
-}
-
-.wave svg {
-  display: block;
-  width: 100%;
-}
 
 /* ── Animações de fundo - anel ── */
 @keyframes ring-rotate {

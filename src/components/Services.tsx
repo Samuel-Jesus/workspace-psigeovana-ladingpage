@@ -8,6 +8,7 @@ import {
   faArrowRight,
 } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { LetterBackdrop } from './LetterBackdrop'
 import './Services.css'
 
 const ease = [0.22, 1, 0.36, 1] as const
@@ -19,7 +20,7 @@ interface Service {
   description: string
   features: string[]
   cta?: string
-  featured?: boolean
+  tone: 'lavender' | 'plum'
 }
 
 const services: Service[] = [
@@ -28,7 +29,7 @@ const services: Service[] = [
     icon: faUserCircle,
     title: 'Psicoterapia Individual',
     description:
-      'Sessões personalizadas de TCC para compreender seus padrões, desenvolver estratégias de enfrentamento e promover mudanças duradouras na sua vida.',
+      'Espaço seguro para compreender ansiedade, autocobrança e sobrecarga. Vamos encontrar seu caminho do meio: mais equilíbrio, leveza e confiança.',
     features: [
       'Atendimento 100% online',
       'Sessões semanais ou quinzenais',
@@ -36,7 +37,7 @@ const services: Service[] = [
       'Ambiente seguro e confidencial',
     ],
     cta: 'Agendar consulta',
-    featured: true,
+    tone: 'lavender',
   },
   {
     num: '02',
@@ -50,6 +51,7 @@ const services: Service[] = [
       'Parcerias e divulgação',
     ],
     cta: 'Entrar em contato',
+    tone: 'plum',
   },
 ]
 
@@ -65,6 +67,7 @@ export function Services() {
 
   return (
     <section id="servicos" className="services" ref={ref}>
+      <LetterBackdrop variant="services" tone="light" />
       <div className="services__inner">
         {/* Cabeçalho */}
         <motion.div className="services__header" {...animate(0)}>
@@ -80,7 +83,7 @@ export function Services() {
           {services.map((s, i) => (
             <motion.article
               key={s.title}
-              className={`services__card${s.featured ? ' services__card--featured' : ''}`}
+              className={`services__card services__card--${s.tone}`}
               {...animate(0.12 + i * 0.14)}
             >
               {/* Número decorativo */}
