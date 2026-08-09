@@ -3,16 +3,16 @@ import { formatCpf, isValidCpf, onlyDigits } from '../../questionnaires/cpf'
 
 interface UnlockGateProps {
   title: string
-  onUnlock: (cpf: string) => void
-  verifyPassword: (password: string) => boolean
+  onUnlock: (cpf: string, password: string) => Promise<void>
 }
 
-export function UnlockGate({ title, onUnlock, verifyPassword }: UnlockGateProps) {
+export function UnlockGate({ title, onUnlock }: UnlockGateProps) {
   const [cpf, setCpf] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
 
@@ -20,12 +20,19 @@ export function UnlockGate({ title, onUnlock, verifyPassword }: UnlockGateProps)
       setError('Informe um CPF válido.')
       return
     }
-    if (!verifyPassword(password)) {
-      setError('Senha incorreta para este questionário.')
+    if (!password.trim()) {
+      setError('Informe a senha do questionário.')
       return
     }
 
-    onUnlock(onlyDigits(cpf))
+    setLoading(true)
+    try {
+      await onUnlock(onlyDigits(cpf), password)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível desbloquear.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -66,8 +73,8 @@ export function UnlockGate({ title, onUnlock, verifyPassword }: UnlockGateProps)
 
           {error && <p className="q-unlock__error" role="alert">{error}</p>}
 
-          <button type="submit" className="q-btn q-btn--primary">
-            Continuar
+          <button type="submit" className="q-btn q-btn--primary" disabled={loading}>
+            {loading ? 'Verificando…' : 'Continuar'}
           </button>
         </form>
       </div>

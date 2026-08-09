@@ -1,11 +1,10 @@
-/** Tipos do módulo de questionários */
+/** Tipos públicos do módulo de questionários (sem senha) */
 
 export type QuestionType = 'scale' | 'text' | 'textarea'
 
 export interface QuestionOption {
   id: string
   label: string
-  /** Para escala 0–10, etc. */
   min?: number
   max?: number
   type: QuestionType
@@ -18,10 +17,7 @@ export interface QuestionnaireDefinition {
   title: string
   subtitle: string
   description: string
-  /** Senha de acesso — depois virá do banco */
-  accessPassword: string
   questions: QuestionOption[]
-  /** Layout especial: roda visual */
   layout?: 'wheel' | 'list'
 }
 
@@ -31,9 +27,4 @@ export interface QuestionnaireSubmission {
   cpf: string
   answers: Record<string, number | string>
   submittedAt: string
-}
-
-export interface QuestionnaireStorage {
-  submit(data: Omit<QuestionnaireSubmission, 'id' | 'submittedAt'>): Promise<QuestionnaireSubmission>
-  listByQuestionnaire?(questionnaireId: string): Promise<QuestionnaireSubmission[]>
 }

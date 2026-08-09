@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getQuestionnaireBySlug } from '../questionnaires/catalog'
+import {
+  getQuestionnaireBySlug,
+  unlockQuestionnaire,
+  type PublicQuestionnaire,
+} from '../questionnaires/api'
 import { UnlockGate } from '../components/questionnaire/UnlockGate'
 import { QuestionnaireForm } from '../components/questionnaire/QuestionnaireForm'
 import { LetterBackdrop } from '../components/LetterBackdrop'
@@ -10,22 +14,66 @@ function sessionKey(slug: string) {
   return `psigeovana.q.unlock.${slug}`
 }
 
+type Session = { cpf: string; unlockToken: string }
+
 export function QuestionnairePage() {
   const { slug } = useParams<{ slug: string }>()
-  const questionnaire = slug ? getQuestionnaireBySlug(slug) : undefined
-  const [cpf, setCpf] = useState<string | null>(null)
+  const [questionnaire, setQuestionnaire] = useState<PublicQuestionnaire | null>(null)
+  const [loadError, setLoadError] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [session, setSession] = useState<Session | null>(null)
   const [done, setDone] = useState(false)
 
   useEffect(() => {
     if (!slug) return
+    let cancelled = false
+
+    setLoading(true)
+    setLoadError('')
+    getQuestionnaireBySlug(slug)
+      .then((item) => {
+        if (!cancelled) setQuestionnaire(item)
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setQuestionnaire(null)
+          setLoadError(err instanceof Error ? err.message : 'Erro ao carregar')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
     const saved = sessionStorage.getItem(sessionKey(slug))
-    if (saved) setCpf(saved)
+    if (saved) {
+      try {
+        setSession(JSON.parse(saved) as Session)
+      } catch {
+        sessionStorage.removeItem(sessionKey(slug))
+      }
+    }
+
+    return () => {
+      cancelled = true
+    }
   }, [slug])
 
-  const handleUnlock = (digits: string) => {
+  const handleUnlock = async (cpf: string, password: string) => {
     if (!slug) return
-    sessionStorage.setItem(sessionKey(slug), digits)
-    setCpf(digits)
+    const result = await unlockQuestionnaire(slug, cpf, password)
+    const next = { cpf: result.cpf, unlockToken: result.unlockToken }
+    sessionStorage.setItem(sessionKey(slug), JSON.stringify(next))
+    setSession(next)
+  }
+
+  if (loading) {
+    return (
+      <div className="q-page">
+        <div className="q-page__inner q-page__inner--narrow">
+          <p className="q-page__lead">Carregando questionário…</p>
+        </div>
+      </div>
+    )
   }
 
   if (!questionnaire) {
@@ -34,7 +82,7 @@ export function QuestionnairePage() {
         <div className="q-page__inner q-page__inner--narrow">
           <h1 className="q-page__title display">Questionário não encontrado</h1>
           <p className="q-page__lead">
-            Verifique o link ou volte à lista de questionários.
+            {loadError || 'Verifique o link ou volte à lista de questionários.'}
           </p>
           <Link to="/questionarios" className="q-btn q-btn--ghost">
             Ver questionários
@@ -52,18 +100,14 @@ export function QuestionnairePage() {
           ← Questionários
         </Link>
 
-        {!cpf && !done && (
-          <UnlockGate
-            title={questionnaire.title}
-            verifyPassword={(pwd) => pwd === questionnaire.accessPassword}
-            onUnlock={handleUnlock}
-          />
+        {!session && !done && (
+          <UnlockGate title={questionnaire.title} onUnlock={handleUnlock} />
         )}
 
-        {cpf && !done && (
+        {session && !done && (
           <QuestionnaireForm
             questionnaire={questionnaire}
-            cpf={cpf}
+            unlockToken={session.unlockToken}
             onDone={() => {
               if (slug) sessionStorage.removeItem(sessionKey(slug))
               setDone(true)

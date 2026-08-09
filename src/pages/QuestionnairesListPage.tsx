@@ -1,10 +1,32 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { listQuestionnaires } from '../questionnaires/catalog'
+import { listQuestionnaires, type PublicQuestionnaire } from '../questionnaires/api'
 import { LetterBackdrop } from '../components/LetterBackdrop'
 import './Questionnaires.css'
 
 export function QuestionnairesListPage() {
-  const items = listQuestionnaires()
+  const [items, setItems] = useState<PublicQuestionnaire[]>([])
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    listQuestionnaires()
+      .then((data) => {
+        if (!cancelled) setItems(data)
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Erro ao carregar')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <div className="q-page">
@@ -19,18 +41,23 @@ export function QuestionnairesListPage() {
           </p>
         </header>
 
-        <ul className="q-list">
-          {items.map((q) => (
-            <li key={q.id}>
-              <Link to={`/questionarios/${q.slug}`} className="q-list__card">
-                <span className="q-list__eyebrow">{q.subtitle}</span>
-                <h2 className="q-list__title display">{q.title}</h2>
-                <p className="q-list__desc">{q.description}</p>
-                <span className="q-list__cta">Abrir questionário →</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {loading && <p className="q-page__lead">Carregando…</p>}
+        {error && <p className="q-unlock__error" role="alert">{error}</p>}
+
+        {!loading && !error && (
+          <ul className="q-list">
+            {items.map((q) => (
+              <li key={q.id}>
+                <Link to={`/questionarios/${q.slug}`} className="q-list__card">
+                  <span className="q-list__eyebrow">{q.subtitle}</span>
+                  <h2 className="q-list__title display">{q.title}</h2>
+                  <p className="q-list__desc">{q.description}</p>
+                  <span className="q-list__cta">Abrir questionário →</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   )

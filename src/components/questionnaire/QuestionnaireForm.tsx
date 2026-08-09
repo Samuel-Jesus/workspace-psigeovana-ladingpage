@@ -1,17 +1,17 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import type { QuestionnaireDefinition } from '../../questionnaires/types'
-import { getStorage } from '../../questionnaires/storage'
+import { submitQuestionnaire } from '../../questionnaires/api'
 import { WheelChart, WHEEL_COLORS } from './WheelChart'
 
 interface QuestionnaireFormProps {
   questionnaire: QuestionnaireDefinition
-  cpf: string
+  unlockToken: string
   onDone: () => void
 }
 
 export function QuestionnaireForm({
   questionnaire,
-  cpf,
+  unlockToken,
   onDone,
 }: QuestionnaireFormProps) {
   const [answers, setAnswers] = useState<Record<string, number>>(() =>
@@ -55,14 +55,14 @@ export function QuestionnaireForm({
       const payload: Record<string, number | string> = { ...answers }
       if (notes.trim()) payload.observacoes = notes.trim()
 
-      await getStorage().submit({
-        questionnaireId: questionnaire.id,
-        cpf,
-        answers: payload,
-      })
+      await submitQuestionnaire(questionnaire.slug, unlockToken, payload)
       onDone()
-    } catch {
-      setError('Não foi possível salvar. Tente novamente em instantes.')
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Não foi possível salvar. Tente novamente em instantes.',
+      )
     } finally {
       setSubmitting(false)
     }
