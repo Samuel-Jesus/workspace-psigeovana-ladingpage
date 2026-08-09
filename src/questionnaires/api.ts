@@ -11,17 +11,35 @@ export type PublicQuestionnaire = {
 }
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`/api${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init?.headers ?? {}),
-    },
-  })
+  let res: Response
+  try {
+    res = await fetch(`/api${path}`, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(init?.headers ?? {}),
+      },
+    })
+  } catch {
+    throw new Error(
+      'Não foi possível conectar à API. Rode `npm run dev` (web + api) ou `npm run dev:api`.',
+    )
+  }
 
-  const data = (await res.json().catch(() => ({}))) as T & { error?: string }
+  const text = await res.text()
+  let data: T & { error?: string }
+  try {
+    data = text ? (JSON.parse(text) as T & { error?: string }) : ({} as T & { error?: string })
+  } catch {
+    throw new Error(
+      res.ok
+        ? 'Resposta inválida da API.'
+        : 'API indisponível ou em porta errada. Confira se `npm run dev:api` está rodando na 8787.',
+    )
+  }
+
   if (!res.ok) {
-    throw new Error(data.error ?? 'Falha na requisição')
+    throw new Error(data.error ?? `Falha na requisição (${res.status})`)
   }
   return data
 }

@@ -6,8 +6,15 @@ import bcrypt from 'bcryptjs'
 import { getDb, type PublicQuestionnaire, type QuestionnaireRow } from './db'
 import { isValidCpf, onlyDigits } from './cpf'
 import { createUnlockToken, verifyUnlockToken } from './unlock'
+import { createAdminToken, getAdminPassword, verifyAdminToken } from './admin'
 
 const app = new Hono()
+
+function requireAdmin(c: { req: { header: (name: string) => string | undefined } }) {
+  const header = c.req.header('Authorization') ?? ''
+  const token = header.startsWith('Bearer ') ? header.slice(7) : ''
+  return verifyAdminToken(token)
+}
 
 app.use(
   '/api/*',
@@ -139,6 +146,124 @@ app.post('/api/questionnaires/:slug/submit', async (c) => {
     id: submission.id,
     submittedAt: submission.submitted_at,
   })
+})
+
+app.post('/api/admin/login', async (c) => {
+  const body = await c.req.json<{ password?: string }>()
+  const expected = getAdminPassword()
+  if (!expected) {
+    return c.json({ error: 'ADMIN_PASSWORD não configurada no servidor.' }, 500)
+  }
+  if (!body.password || body.password !== expected) {
+    return c.json({ error: 'Senha do painel incorreta.' }, 401)
+  }
+  return c.json({ ok: true, token: createAdminToken() })
+})
+
+app.get('/api/admin/submissions', async (c) => {
+  if (!requireAdmin(c)) {
+    return c.json({ error: 'Não autorizado.' }, 401)
+  }
+
+  const sql = getDb()
+  const slug = c.req.query('slug') ?? ''
+  const cpfRaw = c.req.query('cpf') ?? ''
+  const cpf = onlyDigits(cpfRaw)
+
+  const rows = slug
+    ? cpf
+      ? await sql`
+          SELECT
+            s.id,
+            s.cpf,
+            s.answers,
+            s.submitted_at,
+            q.slug,
+            q.title,
+            q.layout
+          FROM questionnaire_submissions s
+          JOIN questionnaires q ON q.id = s.questionnaire_id
+          WHERE q.slug = ${slug} AND s.cpf = ${cpf}
+          ORDER BY s.submitted_at DESC
+          LIMIT 200
+        `
+      : await sql`
+          SELECT
+            s.id,
+            s.cpf,
+            s.answers,
+            s.submitted_at,
+            q.slug,
+            q.title,
+            q.layout
+          FROM questionnaire_submissions s
+          JOIN questionnaires q ON q.id = s.questionnaire_id
+          WHERE q.slug = ${slug}
+          ORDER BY s.submitted_at DESC
+          LIMIT 200
+        `
+    : cpf
+      ? await sql`
+          SELECT
+            s.id,
+            s.cpf,
+            s.answers,
+            s.submitted_at,
+            q.slug,
+            q.title,
+            q.layout
+          FROM questionnaire_submissions s
+          JOIN questionnaires q ON q.id = s.questionnaire_id
+          WHERE s.cpf = ${cpf}
+          ORDER BY s.submitted_at DESC
+          LIMIT 200
+        `
+      : await sql`
+          SELECT
+            s.id,
+            s.cpf,
+            s.answers,
+            s.submitted_at,
+            q.slug,
+            q.title,
+            q.layout
+          FROM questionnaire_submissions s
+          JOIN questionnaires q ON q.id = s.questionnaire_id
+          ORDER BY s.submitted_at DESC
+          LIMIT 200
+        `
+
+  return c.json({ items: rows })
+})
+
+app.get('/api/admin/submissions/:id', async (c) => {
+  if (!requireAdmin(c)) {
+    return c.json({ error: 'Não autorizado.' }, 401)
+  }
+
+  const sql = getDb()
+  const id = c.req.param('id')
+  const rows = await sql`
+    SELECT
+      s.id,
+      s.cpf,
+      s.answers,
+      s.submitted_at,
+      q.id AS questionnaire_id,
+      q.slug,
+      q.title,
+      q.subtitle,
+      q.layout,
+      q.questions
+    FROM questionnaire_submissions s
+    JOIN questionnaires q ON q.id = s.questionnaire_id
+    WHERE s.id = ${id}
+    LIMIT 1
+  `
+
+  const item = rows[0]
+  if (!item) return c.json({ error: 'Resposta não encontrada.' }, 404)
+  return c.json({ item })
 })
 
 const port = Number(process.env.API_PORT ?? 8787)

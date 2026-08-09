@@ -11,7 +11,8 @@ interface WheelChartProps {
   segments: WheelSegment[]
   max?: number
   size?: number
-  onChange: (id: string, value: number) => void
+  readOnly?: boolean
+  onChange?: (id: string, value: number) => void
 }
 
 function polar(cx: number, cy: number, r: number, angle: number) {
@@ -62,6 +63,7 @@ export function WheelChart({
   segments,
   max = 10,
   size = 420,
+  readOnly = false,
   onChange,
 }: WheelChartProps) {
   const uid = useId()
@@ -106,6 +108,7 @@ export function WheelChart({
     segmentIndex: number,
     id: string,
   ) => {
+    if (readOnly || !onChange) return
     const score = scoreFromPoint(e.clientX, e.clientY)
     const current = segments[segmentIndex]?.value ?? 0
     onChange(id, current === score ? 0 : score)
@@ -177,12 +180,13 @@ export function WheelChart({
               {/* Área clicável */}
               <path
                 d={hit}
-                className="wheel-chart__hit"
+                className={`wheel-chart__hit${readOnly ? ' wheel-chart__hit--readonly' : ''}`}
                 fill="transparent"
                 stroke="rgba(51, 25, 60, 0.22)"
                 strokeWidth={1}
                 onClick={(e) => handleSegmentClick(e, i, seg.id)}
                 onKeyDown={(e) => {
+                  if (readOnly || !onChange) return
                   if (e.key === 'ArrowUp' || e.key === '+') {
                     e.preventDefault()
                     onChange(seg.id, Math.min(max, (seg.value || 0) + 1))
@@ -192,12 +196,12 @@ export function WheelChart({
                     onChange(seg.id, Math.max(0, (seg.value || 0) - 1))
                   }
                 }}
-                tabIndex={0}
-                role="slider"
+                tabIndex={readOnly ? -1 : 0}
+                role={readOnly ? 'img' : 'slider'}
                 aria-label={`${seg.label}: ${seg.value} de ${max}`}
-                aria-valuemin={0}
-                aria-valuemax={max}
-                aria-valuenow={seg.value}
+                aria-valuemin={readOnly ? undefined : 0}
+                aria-valuemax={readOnly ? undefined : max}
+                aria-valuenow={readOnly ? undefined : seg.value}
               />
 
               {/* Marcadores de nível no meio da fatia (feedback visual) */}
