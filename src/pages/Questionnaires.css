@@ -344,7 +344,16 @@
 }
 
 .wheel-chart__fill {
-  transition: d 0.25s var(--ease);
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.wheel-chart__segment.is-pulsing .wheel-chart__fill {
+  animation: wheel-fill-pulse 0.42s var(--ease);
+}
+
+.wheel-chart__level-dot {
+  transition: r 0.25s var(--ease), opacity 0.25s var(--ease), fill 0.25s var(--ease);
 }
 
 .wheel-chart__hit {
@@ -354,6 +363,10 @@
 
 .wheel-chart__hit:hover {
   fill: rgba(255, 255, 255, 0.12);
+}
+
+.wheel-chart__hit:active {
+  fill: rgba(255, 255, 255, 0.2);
 }
 
 .wheel-chart__hit:focus-visible {
@@ -367,6 +380,29 @@
   font-family: var(--font-body);
   font-size: 10px;
   font-weight: 600;
+}
+
+@keyframes wheel-fill-pulse {
+  0% {
+    filter: brightness(1);
+    opacity: 0.85;
+  }
+  40% {
+    filter: brightness(1.18);
+    opacity: 1;
+  }
+  100% {
+    filter: brightness(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wheel-chart__segment.is-pulsing .wheel-chart__fill,
+  .wheel-chart__level-dot {
+    animation: none;
+    transition: none;
+  }
 }
 
 @media (max-width: 600px) {

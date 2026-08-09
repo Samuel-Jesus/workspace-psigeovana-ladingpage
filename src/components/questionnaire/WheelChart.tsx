@@ -1,4 +1,12 @@
-import { useCallback, useId, useMemo, useRef, type MouseEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+} from 'react'
 
 export interface WheelSegment {
   id: string
@@ -55,6 +63,67 @@ function ringSlice(
   ].join(' ')
 }
 
+function easeOutCubic(t: number) {
+  return 1 - (1 - t) ** 3
+}
+
+function prefersReducedMotion() {
+  return (
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+}
+
+function hapticTap() {
+  if (typeof navigator === 'undefined' || prefersReducedMotion()) return
+  try {
+    navigator.vibrate?.(16)
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Interpola as notas da roda para animar o preenchimento. */
+function useAnimatedScores(targets: number[], duration = 380) {
+  const [display, setDisplay] = useState(targets)
+  const displayRef = useRef(targets)
+  const rafRef = useRef(0)
+  const key = targets.join(',')
+
+  useEffect(() => {
+    const from = displayRef.current
+    const to = key.split(',').map(Number)
+
+    if (prefersReducedMotion()) {
+      displayRef.current = to
+      setDisplay(to)
+      return
+    }
+
+    const same = from.length === to.length && from.every((v, i) => v === to[i])
+    if (same) return
+
+    const start = performance.now()
+    cancelAnimationFrame(rafRef.current)
+
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration)
+      const e = easeOutCubic(t)
+      const next = from.map((f, i) => f + ((to[i] ?? 0) - f) * e)
+      displayRef.current = next
+      setDisplay(next)
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(tick)
+      }
+    }
+
+    rafRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [key, duration])
+
+  return display
+}
+
 /**
  * Roda da Vida interativa: clique na fatia no nível desejado (1–10).
  * Preenche do centro para fora, cada área com cor própria.
@@ -68,6 +137,9 @@ export function WheelChart({
 }: WheelChartProps) {
   const uid = useId()
   const svgRef = useRef<SVGSVGElement>(null)
+  const [pulseId, setPulseId] = useState<string | null>(null)
+  const pulseTimer = useRef(0)
+
   const n = segments.length
   const cx = size / 2
   const cy = size / 2
@@ -77,6 +149,9 @@ export function WheelChart({
   const step = (outerR - innerR) / max
   const slice = (Math.PI * 2) / n
   const startOffset = -Math.PI / 2
+
+  const targetScores = useMemo(() => segments.map((s) => s.value), [segments])
+  const displayScores = useAnimatedScores(targetScores)
 
   const levels = useMemo(() => Array.from({ length: max }, (_, i) => i + 1), [max])
 
@@ -103,6 +178,14 @@ export function WheelChart({
     [cx, cy, innerR, max, step],
   )
 
+  const triggerPulse = (id: string) => {
+    setPulseId(id)
+    window.clearTimeout(pulseTimer.current)
+    pulseTimer.current = window.setTimeout(() => setPulseId(null), 420)
+  }
+
+  useEffect(() => () => window.clearTimeout(pulseTimer.current), [])
+
   const handleSegmentClick = (
     e: MouseEvent<SVGElement>,
     segmentIndex: number,
@@ -111,7 +194,10 @@ export function WheelChart({
     if (readOnly || !onChange) return
     const score = scoreFromPoint(e.clientX, e.clientY)
     const current = segments[segmentIndex]?.value ?? 0
-    onChange(id, current === score ? 0 : score)
+    const next = current === score ? 0 : score
+    hapticTap()
+    triggerPulse(id)
+    onChange(id, next)
   }
 
   return (
@@ -141,7 +227,6 @@ export function WheelChart({
           ))}
         </defs>
 
-        {/* Anéis guia 1–10 */}
         {levels.map((level) => (
           <circle
             key={`ring-${level}`}
@@ -153,31 +238,31 @@ export function WheelChart({
           />
         ))}
 
-        {/* Fatias clicáveis (hit area completa até 10) */}
         {segments.map((seg, i) => {
           const a0 = angleOf(i)
           const a1 = a0 + slice
           const hit = ringSlice(cx, cy, innerR, outerR, a0, a1)
-          const fillR = innerR + (Math.max(0, Math.min(seg.value, max)) / max) * (outerR - innerR)
-          const fill =
-            seg.value > 0
-              ? ringSlice(cx, cy, innerR, fillR, a0, a1)
-              : ''
+          const displayValue = displayScores[i] ?? 0
+          const fillR =
+            innerR + (Math.max(0, Math.min(displayValue, max)) / max) * (outerR - innerR)
+          const showFill = displayValue > 0.05
+          const fill = showFill ? ringSlice(cx, cy, innerR, fillR, a0, a1) : ''
+          const pulsing = pulseId === seg.id
 
           return (
-            <g key={seg.id} className="wheel-chart__segment">
-              {/* Preenchimento atual */}
-              {seg.value > 0 && (
+            <g
+              key={seg.id}
+              className={`wheel-chart__segment${pulsing ? ' is-pulsing' : ''}`}
+            >
+              {showFill && (
                 <path
                   d={fill}
                   fill={`url(#${uid}-${seg.id})`}
                   className="wheel-chart__fill"
-                  style={{ ['--seg-color' as string]: seg.color }}
                   pointerEvents="none"
                 />
               )}
 
-              {/* Área clicável */}
               <path
                 d={hit}
                 className={`wheel-chart__hit${readOnly ? ' wheel-chart__hit--readonly' : ''}`}
@@ -189,10 +274,14 @@ export function WheelChart({
                   if (readOnly || !onChange) return
                   if (e.key === 'ArrowUp' || e.key === '+') {
                     e.preventDefault()
+                    hapticTap()
+                    triggerPulse(seg.id)
                     onChange(seg.id, Math.min(max, (seg.value || 0) + 1))
                   }
                   if (e.key === 'ArrowDown' || e.key === '-') {
                     e.preventDefault()
+                    hapticTap()
+                    triggerPulse(seg.id)
                     onChange(seg.id, Math.max(0, (seg.value || 0) - 1))
                   }
                 }}
@@ -204,18 +293,18 @@ export function WheelChart({
                 aria-valuenow={readOnly ? undefined : seg.value}
               />
 
-              {/* Marcadores de nível no meio da fatia (feedback visual) */}
               {levels.map((level) => {
                 const mid = a0 + slice / 2
                 const r = innerR + level * step - step * 0.15
                 const p = polar(cx, cy, r, mid)
-                const active = seg.value >= level
+                const active = displayValue >= level - 0.15
                 return (
                   <circle
                     key={`${seg.id}-lv-${level}`}
                     cx={p.x}
                     cy={p.y}
                     r={active ? 2.2 : 1.4}
+                    className="wheel-chart__level-dot"
                     fill={active ? seg.color : 'rgba(51,25,60,0.18)'}
                     pointerEvents="none"
                     opacity={active ? 0.9 : 0.45}
@@ -226,10 +315,8 @@ export function WheelChart({
           )
         })}
 
-        {/* Centro */}
         <circle cx={cx} cy={cy} r={innerR} className="wheel-chart__hub" />
 
-        {/* Raios divisores */}
         {segments.map((_, i) => {
           const a = angleOf(i)
           const tip = polar(cx, cy, outerR, a)
@@ -246,7 +333,6 @@ export function WheelChart({
           )
         })}
 
-        {/* Contorno externo */}
         <circle
           cx={cx}
           cy={cy}
@@ -256,7 +342,6 @@ export function WheelChart({
           pointerEvents="none"
         />
 
-        {/* Labels */}
         {segments.map((seg, i) => {
           const mid = angleOf(i) + slice / 2
           const p = polar(cx, cy, labelR, mid)
