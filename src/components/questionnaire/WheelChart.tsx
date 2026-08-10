@@ -1,0 +1,422 @@
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
+
+export interface WheelSegment {
+  id: string
+  label: string
+  color: string
+  value: number
+}
+
+interface WheelChartProps {
+  segments: WheelSegment[]
+  max?: number
+  size?: number
+  readOnly?: boolean
+  onChange?: (id: string, value: number) => void
+}
+
+function polar(cx: number, cy: number, r: number, angle: number) {
+  return {
+    x: cx + Math.cos(angle) * r,
+    y: cy + Math.sin(angle) * r,
+  }
+}
+
+/** Arco para textPath (texto acompanha o círculo). */
+function arcPath(
+  cx: number,
+  cy: number,
+  r: number,
+  a0: number,
+  a1: number,
+  reverse: boolean,
+) {
+  const start = reverse ? a1 : a0
+  const end = reverse ? a0 : a1
+  const p0 = polar(cx, cy, r, start)
+  const p1 = polar(cx, cy, r, end)
+  const large = Math.abs(a1 - a0) > Math.PI ? 1 : 0
+  const sweep = reverse ? 0 : 1
+  return `M${p0.x},${p0.y} A${r},${r} 0 ${large} ${sweep} ${p1.x},${p1.y}`
+}
+
+/** Fatia anular entre r0–r1 e ângulos a0–a1 */
+function ringSlice(
+  cx: number,
+  cy: number,
+  r0: number,
+  r1: number,
+  a0: number,
+  a1: number,
+) {
+  const p0 = polar(cx, cy, r1, a0)
+  const p1 = polar(cx, cy, r1, a1)
+  const p2 = polar(cx, cy, r0, a1)
+  const p3 = polar(cx, cy, r0, a0)
+  const large = a1 - a0 > Math.PI ? 1 : 0
+
+  if (r0 <= 0.5) {
+    return [
+      `M${cx},${cy}`,
+      `L${p0.x},${p0.y}`,
+      `A${r1},${r1} 0 ${large} 1 ${p1.x},${p1.y}`,
+      'Z',
+    ].join(' ')
+  }
+
+  return [
+    `M${p0.x},${p0.y}`,
+    `A${r1},${r1} 0 ${large} 1 ${p1.x},${p1.y}`,
+    `L${p2.x},${p2.y}`,
+    `A${r0},${r0} 0 ${large} 0 ${p3.x},${p3.y}`,
+    'Z',
+  ].join(' ')
+}
+
+function easeOutCubic(t: number) {
+  return 1 - (1 - t) ** 3
+}
+
+function prefersReducedMotion() {
+  return (
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+}
+
+function hapticTap() {
+  if (typeof navigator === 'undefined' || prefersReducedMotion()) return
+  try {
+    navigator.vibrate?.(16)
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Interpola as notas da roda para animar o preenchimento. */
+function useAnimatedScores(targets: number[], duration = 380) {
+  const [display, setDisplay] = useState(targets)
+  const displayRef = useRef(targets)
+  const rafRef = useRef(0)
+  const key = targets.join(',')
+
+  useEffect(() => {
+    const from = displayRef.current
+    const to = key.split(',').map(Number)
+
+    if (prefersReducedMotion()) {
+      displayRef.current = to
+      setDisplay(to)
+      return
+    }
+
+    const same = from.length === to.length && from.every((v, i) => v === to[i])
+    if (same) return
+
+    const start = performance.now()
+    cancelAnimationFrame(rafRef.current)
+
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration)
+      const e = easeOutCubic(t)
+      const next = from.map((f, i) => f + ((to[i] ?? 0) - f) * e)
+      displayRef.current = next
+      setDisplay(next)
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(tick)
+      }
+    }
+
+    rafRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [key, duration])
+
+  return display
+}
+
+function useIsMobile(query = '(max-width: 640px)') {
+  const [matches, setMatches] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia(query)
+    const sync = () => setMatches(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [query])
+
+  return matches
+}
+
+const CURVED_LABELS: Record<string, string> = {
+  'trabalho-financas': 'Trabalho',
+  'relacionamento-amoroso': 'Amor',
+  autocuidado: 'Cuidado',
+}
+
+/**
+ * Roda da Vida interativa: clique na fatia no nível desejado (1–10).
+ * Preenche do centro para fora, cada área com cor própria.
+ */
+export function WheelChart({
+  segments,
+  max = 10,
+  size = 680,
+  readOnly = false,
+  onChange,
+}: WheelChartProps) {
+  const uid = useId().replace(/:/g, '')
+  const isMobile = useIsMobile()
+  const [pulseId, setPulseId] = useState<string | null>(null)
+  const pulseTimer = useRef(0)
+
+  const n = segments.length
+  // Mobile: disco grande; labels curvados pedem pouco padding extra
+  const pad = size * (isMobile ? 0.055 : 0.12)
+  const vb = size + pad * 2
+  const cx = size / 2 + pad
+  const cy = size / 2 + pad
+  const innerR = size * (isMobile ? 0.055 : 0.065)
+  const outerR = size * (isMobile ? 0.445 : 0.365)
+  const labelR = size * (isMobile ? 0.478 : 0.425)
+  const labelFontSize = size * (isMobile ? 0.028 : 0.02)
+  const labelHalo = size * (isMobile ? 0.009 : 0.006)
+  const step = (outerR - innerR) / max
+  const slice = (Math.PI * 2) / n
+  const startOffset = -Math.PI / 2
+
+  const targetScores = useMemo(() => segments.map((s) => s.value), [segments])
+  const displayScores = useAnimatedScores(targetScores)
+
+  const levels = useMemo(() => Array.from({ length: max }, (_, i) => i + 1), [max])
+
+  const angleOf = (i: number) => startOffset + i * slice
+
+  const triggerPulse = (id: string) => {
+    setPulseId(id)
+    window.clearTimeout(pulseTimer.current)
+    pulseTimer.current = window.setTimeout(() => setPulseId(null), 420)
+  }
+
+  useEffect(() => () => window.clearTimeout(pulseTimer.current), [])
+
+  const applyScore = (id: string, current: number, score: number) => {
+    if (readOnly || !onChange) return
+    const next = current === score ? 0 : score
+    hapticTap()
+    triggerPulse(id)
+    onChange(id, next)
+  }
+
+  const curvedLabel = (seg: WheelSegment) => CURVED_LABELS[seg.id] ?? seg.label
+
+  return (
+    <div className={`wheel-chart-wrap${isMobile ? ' is-mobile' : ''}`}>
+      <svg
+        className="wheel-chart"
+        viewBox={`0 0 ${vb} ${vb}`}
+        width={vb}
+        height={vb}
+        role="img"
+        aria-label="Roda da vida interativa. Toque em cada área para avaliar de 1 a 10."
+      >
+        <defs>
+          {segments.map((s) => (
+            <linearGradient
+              key={s.id}
+              id={`${uid}-${s.id}`}
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop offset="0%" stopColor={s.color} stopOpacity="0.92" />
+              <stop offset="100%" stopColor={s.color} stopOpacity="0.68" />
+            </linearGradient>
+          ))}
+
+          {segments.map((seg, i) => {
+            const a0 = angleOf(i)
+            const a1 = a0 + slice
+            const mid = a0 + slice / 2
+            const flip = Math.sin(mid) > 0.12
+            const inset = slice * 0.12
+            return (
+              <path
+                key={`arc-${seg.id}`}
+                id={`${uid}-arc-${seg.id}`}
+                d={arcPath(cx, cy, labelR, a0 + inset, a1 - inset, flip)}
+                fill="none"
+              />
+            )
+          })}
+        </defs>
+
+        {/* Fundo suave da área útil */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={outerR}
+          className="wheel-chart__disk"
+          pointerEvents="none"
+        />
+
+        {levels.map((level) => (
+          <circle
+            key={`ring-${level}`}
+            cx={cx}
+            cy={cy}
+            r={innerR + level * step}
+            className="wheel-chart__ring"
+            fill="none"
+          />
+        ))}
+
+        {segments.map((seg, i) => {
+          const a0 = angleOf(i)
+          const a1 = a0 + slice
+          const displayValue = displayScores[i] ?? 0
+          const fillR =
+            innerR + (Math.max(0, Math.min(displayValue, max)) / max) * (outerR - innerR)
+          const showFill = displayValue > 0.05
+          const fill = showFill ? ringSlice(cx, cy, innerR, fillR, a0, a1) : ''
+          const pulsing = pulseId === seg.id
+
+          return (
+            <g
+              key={seg.id}
+              className={`wheel-chart__segment${pulsing ? ' is-pulsing' : ''}`}
+              style={{ ['--seg-color' as string]: seg.color }}
+            >
+              {showFill && (
+                <path
+                  d={fill}
+                  fill={`url(#${uid}-${seg.id})`}
+                  className="wheel-chart__fill"
+                  pointerEvents="none"
+                />
+              )}
+
+              {levels.map((level) => {
+                const r0 = innerR + (level - 1) * step
+                const r1 = innerR + level * step
+                const cell = ringSlice(cx, cy, r0, r1, a0, a1)
+                const isFocusCell = level === 1
+
+                return (
+                  <path
+                    key={`${seg.id}-cell-${level}`}
+                    d={cell}
+                    className={`wheel-chart__cell${readOnly ? ' wheel-chart__cell--readonly' : ''}`}
+                    fill="transparent"
+                    onClick={() => applyScore(seg.id, seg.value, level)}
+                    onKeyDown={
+                      isFocusCell
+                        ? (e) => {
+                            if (readOnly || !onChange) return
+                            if (e.key === 'ArrowUp' || e.key === '+') {
+                              e.preventDefault()
+                              hapticTap()
+                              triggerPulse(seg.id)
+                              onChange(seg.id, Math.min(max, (seg.value || 0) + 1))
+                            }
+                            if (e.key === 'ArrowDown' || e.key === '-') {
+                              e.preventDefault()
+                              hapticTap()
+                              triggerPulse(seg.id)
+                              onChange(seg.id, Math.max(0, (seg.value || 0) - 1))
+                            }
+                          }
+                        : undefined
+                    }
+                    tabIndex={readOnly || !isFocusCell ? -1 : 0}
+                    role={readOnly ? undefined : isFocusCell ? 'slider' : 'button'}
+                    aria-label={
+                      readOnly
+                        ? undefined
+                        : isFocusCell
+                          ? `${seg.label}: ${seg.value} de ${max}`
+                          : `${seg.label}, nota ${level}`
+                    }
+                    aria-valuemin={isFocusCell && !readOnly ? 0 : undefined}
+                    aria-valuemax={isFocusCell && !readOnly ? max : undefined}
+                    aria-valuenow={isFocusCell && !readOnly ? seg.value : undefined}
+                  />
+                )
+              })}
+            </g>
+          )
+        })}
+
+        {segments.map((_, i) => {
+          const a = angleOf(i)
+          const tip = polar(cx, cy, outerR, a)
+          return (
+            <line
+              key={`spoke-${i}`}
+              x1={cx}
+              y1={cy}
+              x2={tip.x}
+              y2={tip.y}
+              className="wheel-chart__spoke"
+              pointerEvents="none"
+            />
+          )
+        })}
+
+        <circle
+          cx={cx}
+          cy={cy}
+          r={outerR}
+          className="wheel-chart__outline"
+          fill="none"
+          pointerEvents="none"
+        />
+
+        <circle cx={cx} cy={cy} r={innerR} className="wheel-chart__hub" />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={innerR * 0.55}
+          className="wheel-chart__hub-inner"
+          pointerEvents="none"
+        />
+
+        {segments.map((seg) => (
+          <text
+            key={`label-${seg.id}`}
+            className="wheel-chart__label"
+            fill={seg.color}
+            fontSize={labelFontSize}
+            stroke="#efdfbe"
+            strokeWidth={labelHalo}
+            paintOrder="stroke fill"
+            pointerEvents="none"
+          >
+            <textPath
+              href={`#${uid}-arc-${seg.id}`}
+              startOffset="50%"
+              textAnchor="middle"
+            >
+              {curvedLabel(seg)}
+            </textPath>
+          </text>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+/** Paleta distinta por área da Roda da Vida */
+export const WHEEL_COLORS: Record<string, string> = {
+  saude: '#5b8c5a',
+  'trabalho-financas': '#c4a35a',
+  familia: '#c45c6a',
+  amigos: '#6b8cae',
+  'relacionamento-amoroso': '#b86b9a',
+  lazer: '#d4896a',
+  autocuidado: '#7a9e8e',
+  emocoes: '#8c67ac',
+  sono: '#5a6f9e',
+  futuro: '#9a7b5a',
+}
