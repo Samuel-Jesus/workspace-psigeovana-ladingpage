@@ -100,7 +100,7 @@ export function QuestionnaireForm({
 
         {questionnaire.layout === 'wheel' && (
           <div className="q-form__wheel">
-            <WheelChart segments={segments} readOnly size={360} />
+            <WheelChart segments={segments} readOnly size={560} />
           </div>
         )}
 
@@ -163,8 +163,8 @@ export function QuestionnaireForm({
         <h1 className="q-form__title display">{questionnaire.title}</h1>
         <p className="q-form__desc">{questionnaire.description}</p>
         <p className="q-form__hint">
-          Clique na área desejada — quanto mais para fora, maior a nota (1 a 10).
-          Clique de novo no mesmo nível para zerar.
+          Toque ou clique na área — quanto mais perto da borda, maior a nota (1
+          a 10). No mesmo nível de novo para zerar.
         </p>
       </header>
 

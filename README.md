@@ -1,32 +1,104 @@
-# React + TypeScript + Vite
+# Psi Geovana — Landing & questionários
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Site institucional da psicóloga **Geovana Almeida** (React + Vite) com questionários online (Roda da Vida), API em Hono e banco **Neon Postgres**.
 
-Currently, two official plugins are available:
+## Rotas
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Rota | Descrição |
+|------|-----------|
+| `/` | Landing page |
+| `/questionarios` | Lista de questionários |
+| `/questionarios/:slug` | Responder (CPF + senha do questionário) |
+| `/painel` | Painel da psicóloga (senha admin) |
+| `/painel/:submissionId` | Detalhe de uma resposta |
 
-## React Compiler
+Os questionários **não** têm link na landing — o acesso é pela URL direta.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Pré-requisitos
 
-## Expanding the Oxlint configuration
+- Node.js 20+
+- Conta [Neon](https://neon.tech) com connection string Postgres
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Configuração
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+cp .env.example .env
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Preencha o `.env`:
+
+| Variável | Uso |
+|----------|-----|
+| `DATABASE_URL` | Connection string do Neon |
+| `UNLOCK_SECRET` | Segredo longo para tokens de desbloqueio |
+| `Q_RODA_PASSWORD` | Senha inicial da Roda da Vida (seed) |
+| `ADMIN_PASSWORD` | Senha do painel `/painel` |
+| `API_PORT` | Porta da API (padrão `8787`) |
+| `API_HOST` | `0.0.0.0` para rede local / celular |
+| `CORS_ORIGIN` | Origens do front (IPs `192.168.*` já são aceitos) |
+
+Instale e faça o seed (cria tabelas + Roda da Vida):
+
+```bash
+npm install
+npm run db:seed
+```
+
+## Desenvolvimento
+
+Sobe **API + front** juntos (necessário para questionários funcionarem):
+
+```bash
+npm run dev
+```
+
+- Front: `http://localhost:5173`
+- API: `http://localhost:8787` (o Vite faz proxy de `/api`)
+
+Scripts separados:
+
+```bash
+npm run dev:web   # só Vite
+npm run dev:api   # só API
+```
+
+### Celular na mesma Wi‑Fi
+
+`localhost` no celular aponta para o próprio aparelho. Use o IP do PC:
+
+1. Rode `npm run dev`
+2. No terminal do Vite, abra a URL **Network** (ex.: `http://192.168.100.5:5173`)
+3. PC e celular na mesma rede; firewall do Windows pode pedir permissão nas portas `5173` / `8787`
+
+## Produção
+
+```bash
+npm run build
+npm run preview   # só o front estático
+```
+
+A API (`server/`) precisa ser publicada à parte (Node/hosting que rode `tsx`/`node` com as variáveis de ambiente). Em produção, aponte o front para a API ou use o mesmo domínio com reverse proxy em `/api`.
+
+## Estrutura
+
+```
+src/                 # React (landing, questionários, painel)
+server/              # API Hono + Neon
+  index.ts           # rotas /api/*
+  seed.ts            # tabelas + Roda da Vida
+  unlock.ts          # tokens de CPF + senha
+  admin.ts           # autenticação do painel
+```
+
+## Fluxo do questionário
+
+1. Pessoa abre `/questionarios/roda-da-vida`
+2. Informa CPF e a senha do questionário
+3. Preenche a Roda da Vida (notas 1–10) e confirma
+4. Resposta fica no Neon; a psicóloga vê em `/painel`
+
+## Stack
+
+- React 19, Vite 8, TypeScript, React Router
+- Hono + `@neondatabase/serverless`
+- Framer Motion (landing)

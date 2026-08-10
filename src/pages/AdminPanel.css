@@ -217,12 +217,9 @@
   font-size: 1.05rem;
 }
 
-.wheel-chart__hit--readonly {
+.wheel-chart__cell--readonly {
   cursor: default;
-}
-
-.wheel-chart__hit--readonly:hover {
-  fill: transparent;
+  pointer-events: none;
 }
 
 @media (max-width: 720px) {

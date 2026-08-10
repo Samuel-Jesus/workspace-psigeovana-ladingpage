@@ -5,8 +5,10 @@
   position: relative;
   min-height: 100svh;
   padding: clamp(3rem, 7vw, 5rem) 1.5rem;
+  padding-bottom: max(clamp(3rem, 7vw, 5rem), env(safe-area-inset-bottom));
   background: #efdfbe;
-  overflow: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .q-page__inner {
@@ -18,6 +20,10 @@
 
 .q-page__inner--narrow {
   max-width: 720px;
+}
+
+.q-page__inner--wheel {
+  max-width: 920px;
 }
 
 .q-page__header {
@@ -255,7 +261,7 @@
 .q-form__wheel {
   display: flex;
   justify-content: center;
-  padding: 0.25rem 0 0.5rem;
+  padding: 0.5rem 0 0.75rem;
   overflow: visible;
 }
 
@@ -395,33 +401,45 @@
 .wheel-chart-wrap {
   width: 100%;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 0.35rem 0 0.75rem;
 }
 
 .wheel-chart {
-  max-width: 100%;
+  max-width: min(100%, 780px);
+  width: 100%;
   height: auto;
   overflow: visible;
   touch-action: manipulation;
 }
 
+.wheel-chart__disk {
+  fill: rgba(255, 255, 255, 0.42);
+}
+
 .wheel-chart__ring {
-  stroke: rgba(51, 25, 60, 0.12);
+  stroke: rgba(51, 25, 60, 0.1);
   stroke-width: 1;
 }
 
 .wheel-chart__spoke {
-  stroke: rgba(51, 25, 60, 0.28);
-  stroke-width: 1.25;
+  stroke: rgba(51, 25, 60, 0.22);
+  stroke-width: 1.15;
 }
 
 .wheel-chart__outline {
-  stroke: rgba(51, 25, 60, 0.35);
-  stroke-width: 1.5;
+  stroke: rgba(57, 33, 59, 0.45);
+  stroke-width: 1.75;
 }
 
 .wheel-chart__hub {
   fill: #39213b;
+}
+
+.wheel-chart__hub-inner {
+  fill: color-mix(in srgb, #efdfbe 55%, #39213b);
 }
 
 .wheel-chart__fill {
@@ -433,34 +451,49 @@
   animation: wheel-fill-pulse 0.42s var(--ease);
 }
 
-.wheel-chart__level-dot {
-  transition: r 0.25s var(--ease), opacity 0.25s var(--ease), fill 0.25s var(--ease);
-}
-
-.wheel-chart__hit {
+.wheel-chart__cell {
   cursor: pointer;
-  transition: fill 0.2s;
+  stroke: transparent;
+  stroke-width: 1;
+  transition: fill 0.16s ease, stroke 0.16s ease;
 }
 
-.wheel-chart__hit:hover {
-  fill: rgba(255, 255, 255, 0.12);
+.wheel-chart__cell--readonly {
+  cursor: default;
+  pointer-events: none;
 }
 
-.wheel-chart__hit:active {
-  fill: rgba(255, 255, 255, 0.2);
+@media (hover: hover) and (pointer: fine) {
+  .wheel-chart__cell:not(.wheel-chart__cell--readonly):hover {
+    fill: color-mix(in srgb, var(--seg-color, #8c67ac) 34%, transparent);
+    stroke: color-mix(in srgb, var(--seg-color, #8c67ac) 58%, transparent);
+  }
+
+  .wheel-chart__cell:not(.wheel-chart__cell--readonly):active {
+    fill: color-mix(in srgb, var(--seg-color, #8c67ac) 48%, transparent);
+  }
 }
 
-.wheel-chart__hit:focus-visible {
+.wheel-chart__cell:focus-visible {
   outline: none;
-  fill: rgba(140, 103, 172, 0.12);
-  stroke: var(--lavanda-300);
+  fill: color-mix(in srgb, var(--seg-color, #8c67ac) 24%, transparent);
+  stroke: var(--lavanda-300, #8c67ac);
   stroke-width: 2;
 }
 
 .wheel-chart__label {
   font-family: var(--font-body);
-  font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.wheel-chart-wrap.is-mobile .wheel-chart__label {
+  font-weight: 700;
+}
+
+/* Toque no mobile (fora do media hover) */
+.wheel-chart__cell:not(.wheel-chart__cell--readonly):active {
+  fill: color-mix(in srgb, var(--seg-color, #8c67ac) 42%, transparent);
 }
 
 @keyframes wheel-fill-pulse {
@@ -480,38 +513,111 @@
 
 @media (prefers-reduced-motion: reduce) {
   .wheel-chart__segment.is-pulsing .wheel-chart__fill,
-  .wheel-chart__level-dot {
+  .wheel-chart__cell {
     animation: none;
     transition: none;
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
+  .q-page {
+    padding: 2rem 0.55rem 2.75rem;
+    padding-bottom: max(2.75rem, calc(1.25rem + env(safe-area-inset-bottom)));
+  }
+
+  .q-page__inner,
+  .q-page__inner--narrow,
+  .q-page__inner--wheel {
+    width: 100%;
+    max-width: none;
+  }
+
+  .q-back {
+    margin-bottom: 1.1rem;
+  }
+
+  .q-form {
+    gap: 1.25rem;
+  }
+
+  .q-form__title {
+    font-size: clamp(1.65rem, 7vw, 2rem);
+    margin-bottom: 0.5rem;
+  }
+
+  .q-form__desc,
+  .q-form__hint {
+    font-size: 0.92rem;
+    line-height: 1.6;
+  }
+
+  .q-form__hint {
+    margin-top: 0.35rem;
+  }
+
+  .q-form__wheel {
+    padding: 0.1rem 0 0.15rem;
+    margin-inline: -0.55rem;
+    width: calc(100% + 1.1rem);
+    max-width: none;
+  }
+
+  .wheel-chart-wrap {
+    gap: 0.35rem;
+    margin: 0;
+    width: 100%;
+  }
+
+  .wheel-chart {
+    max-width: none;
+    width: 100%;
+  }
+
   .q-unlock__card {
-    padding: 1.5rem 1.25rem;
+    padding: 1.35rem 1.1rem;
   }
 
   .q-legend {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem 0.75rem;
+    padding: 0.9rem 0.85rem;
+  }
+
+  .q-legend__label {
+    font-size: 0.78rem;
+    white-space: normal;
+    line-height: 1.25;
+  }
+
+  .q-legend__value {
+    font-size: 1.05rem;
+    min-width: 1.4rem;
   }
 
   .q-confirm__scores {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem 0.75rem;
+    padding: 0.95rem 0.85rem;
+  }
+
+  .q-confirm__label {
+    white-space: normal;
+    line-height: 1.25;
+    font-size: 0.8rem;
   }
 
   .q-confirm__actions {
     flex-direction: column;
   }
 
-  .q-confirm__actions .q-btn {
-    width: 100%;
-  }
-
+  .q-confirm__actions .q-btn,
   .q-btn {
     width: 100%;
   }
 
-  .wheel-chart__label {
-    font-size: 8.5px;
+  .q-field input,
+  .q-field textarea {
+    font-size: 16px; /* evita zoom automático no iOS */
+    padding: 0.9rem 0.95rem;
   }
 }

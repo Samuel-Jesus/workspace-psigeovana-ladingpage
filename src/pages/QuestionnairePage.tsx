@@ -95,7 +95,9 @@ export function QuestionnairePage() {
   return (
     <div className="q-page">
       <LetterBackdrop variant="hero" tone="light" />
-      <div className="q-page__inner q-page__inner--narrow">
+      <div
+        className={`q-page__inner${session && !done ? ' q-page__inner--wheel' : ' q-page__inner--narrow'}`}
+      >
         <Link to="/questionarios" className="q-back">
           ← Questionários
         </Link>

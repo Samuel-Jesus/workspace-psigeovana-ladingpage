@@ -200,7 +200,7 @@ export function AdminPanelPage() {
 
               {detail.layout === 'wheel' && segments.length > 0 && (
                 <div className="admin-detail__wheel">
-                  <WheelChart segments={segments} readOnly size={380} />
+                  <WheelChart segments={segments} readOnly size={560} />
                 </div>
               )}
 

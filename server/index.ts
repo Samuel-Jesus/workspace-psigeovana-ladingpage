@@ -19,7 +19,29 @@ function requireAdmin(c: { req: { header: (name: string) => string | undefined }
 app.use(
   '/api/*',
   cors({
-    origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:5173', 'http://localhost:5199'],
+    origin: (origin) => {
+      const allowed = (
+        process.env.CORS_ORIGIN ??
+        'http://localhost:5173,http://localhost:5199,http://127.0.0.1:5173'
+      )
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+
+      if (!origin) return allowed[0] ?? '*'
+      if (allowed.includes('*') || allowed.includes(origin)) return origin
+
+      // Rede local (celular na mesma Wi‑Fi)
+      if (
+        /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?$/.test(
+          origin,
+        )
+      ) {
+        return origin
+      }
+
+      return allowed[0] ?? null
+    },
     allowMethods: ['GET', 'POST', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
   }),
@@ -266,6 +288,25 @@ app.get('/api/admin/submissions/:id', async (c) => {
   return c.json({ item })
 })
 
+import { networkInterfaces } from 'node:os'
+
+function lanAddresses() {
+  const nets = networkInterfaces()
+  const out: string[] = []
+  for (const entries of Object.values(nets)) {
+    for (const net of entries ?? []) {
+      if (net.family === 'IPv4' && !net.internal) out.push(net.address)
+    }
+  }
+  return out
+}
+
 const port = Number(process.env.API_PORT ?? 8787)
-console.log(`API questionários em http://localhost:${port}`)
-serve({ fetch: app.fetch, port })
+const hostname = process.env.API_HOST ?? '0.0.0.0'
+serve({ fetch: app.fetch, port, hostname }, () => {
+  console.log(`API questionários em http://localhost:${port}`)
+  for (const ip of lanAddresses()) {
+    console.log(`  rede: http://${ip}:${port}`)
+  }
+  console.log('No celular, abra o Vite pela URL Network (ex.: http://IP:5173).')
+})

@@ -1,12 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-  type MouseEvent,
-} from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 
 export interface WheelSegment {
   id: string
@@ -28,6 +20,24 @@ function polar(cx: number, cy: number, r: number, angle: number) {
     x: cx + Math.cos(angle) * r,
     y: cy + Math.sin(angle) * r,
   }
+}
+
+/** Arco para textPath (texto acompanha o círculo). */
+function arcPath(
+  cx: number,
+  cy: number,
+  r: number,
+  a0: number,
+  a1: number,
+  reverse: boolean,
+) {
+  const start = reverse ? a1 : a0
+  const end = reverse ? a0 : a1
+  const p0 = polar(cx, cy, r, start)
+  const p1 = polar(cx, cy, r, end)
+  const large = Math.abs(a1 - a0) > Math.PI ? 1 : 0
+  const sweep = reverse ? 0 : 1
+  return `M${p0.x},${p0.y} A${r},${r} 0 ${large} ${sweep} ${p1.x},${p1.y}`
 }
 
 /** Fatia anular entre r0–r1 e ângulos a0–a1 */
@@ -124,6 +134,26 @@ function useAnimatedScores(targets: number[], duration = 380) {
   return display
 }
 
+function useIsMobile(query = '(max-width: 640px)') {
+  const [matches, setMatches] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia(query)
+    const sync = () => setMatches(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [query])
+
+  return matches
+}
+
+const CURVED_LABELS: Record<string, string> = {
+  'trabalho-financas': 'Trabalho',
+  'relacionamento-amoroso': 'Amor',
+  autocuidado: 'Cuidado',
+}
+
 /**
  * Roda da Vida interativa: clique na fatia no nível desejado (1–10).
  * Preenche do centro para fora, cada área com cor própria.
@@ -131,21 +161,26 @@ function useAnimatedScores(targets: number[], duration = 380) {
 export function WheelChart({
   segments,
   max = 10,
-  size = 420,
+  size = 680,
   readOnly = false,
   onChange,
 }: WheelChartProps) {
-  const uid = useId()
-  const svgRef = useRef<SVGSVGElement>(null)
+  const uid = useId().replace(/:/g, '')
+  const isMobile = useIsMobile()
   const [pulseId, setPulseId] = useState<string | null>(null)
   const pulseTimer = useRef(0)
 
   const n = segments.length
-  const cx = size / 2
-  const cy = size / 2
-  const innerR = size * 0.06
-  const outerR = size * 0.36
-  const labelR = size * 0.44
+  // Mobile: disco grande; labels curvados pedem pouco padding extra
+  const pad = size * (isMobile ? 0.055 : 0.12)
+  const vb = size + pad * 2
+  const cx = size / 2 + pad
+  const cy = size / 2 + pad
+  const innerR = size * (isMobile ? 0.055 : 0.065)
+  const outerR = size * (isMobile ? 0.445 : 0.365)
+  const labelR = size * (isMobile ? 0.478 : 0.425)
+  const labelFontSize = size * (isMobile ? 0.028 : 0.02)
+  const labelHalo = size * (isMobile ? 0.009 : 0.006)
   const step = (outerR - innerR) / max
   const slice = (Math.PI * 2) / n
   const startOffset = -Math.PI / 2
@@ -157,27 +192,6 @@ export function WheelChart({
 
   const angleOf = (i: number) => startOffset + i * slice
 
-  const scoreFromPoint = useCallback(
-    (clientX: number, clientY: number) => {
-      const svg = svgRef.current
-      if (!svg) return 1
-      const pt = svg.createSVGPoint()
-      pt.x = clientX
-      pt.y = clientY
-      const ctm = svg.getScreenCTM()
-      if (!ctm) return 1
-      const local = pt.matrixTransform(ctm.inverse())
-      const dx = local.x - cx
-      const dy = local.y - cy
-      const dist = Math.sqrt(dx * dx + dy * dy)
-
-      if (dist <= innerR) return 1
-      const raw = Math.ceil((dist - innerR) / step)
-      return Math.max(1, Math.min(max, raw))
-    },
-    [cx, cy, innerR, max, step],
-  )
-
   const triggerPulse = (id: string) => {
     setPulseId(id)
     window.clearTimeout(pulseTimer.current)
@@ -186,30 +200,25 @@ export function WheelChart({
 
   useEffect(() => () => window.clearTimeout(pulseTimer.current), [])
 
-  const handleSegmentClick = (
-    e: MouseEvent<SVGElement>,
-    segmentIndex: number,
-    id: string,
-  ) => {
+  const applyScore = (id: string, current: number, score: number) => {
     if (readOnly || !onChange) return
-    const score = scoreFromPoint(e.clientX, e.clientY)
-    const current = segments[segmentIndex]?.value ?? 0
     const next = current === score ? 0 : score
     hapticTap()
     triggerPulse(id)
     onChange(id, next)
   }
 
+  const curvedLabel = (seg: WheelSegment) => CURVED_LABELS[seg.id] ?? seg.label
+
   return (
-    <div className="wheel-chart-wrap">
+    <div className={`wheel-chart-wrap${isMobile ? ' is-mobile' : ''}`}>
       <svg
-        ref={svgRef}
         className="wheel-chart"
-        viewBox={`0 0 ${size} ${size}`}
-        width={size}
-        height={size}
+        viewBox={`0 0 ${vb} ${vb}`}
+        width={vb}
+        height={vb}
         role="img"
-        aria-label="Roda da vida interativa. Clique em cada área para avaliar de 1 a 10."
+        aria-label="Roda da vida interativa. Toque em cada área para avaliar de 1 a 10."
       >
         <defs>
           {segments.map((s) => (
@@ -221,11 +230,36 @@ export function WheelChart({
               x2="100%"
               y2="100%"
             >
-              <stop offset="0%" stopColor={s.color} stopOpacity="0.95" />
-              <stop offset="100%" stopColor={s.color} stopOpacity="0.7" />
+              <stop offset="0%" stopColor={s.color} stopOpacity="0.92" />
+              <stop offset="100%" stopColor={s.color} stopOpacity="0.68" />
             </linearGradient>
           ))}
+
+          {segments.map((seg, i) => {
+            const a0 = angleOf(i)
+            const a1 = a0 + slice
+            const mid = a0 + slice / 2
+            const flip = Math.sin(mid) > 0.12
+            const inset = slice * 0.12
+            return (
+              <path
+                key={`arc-${seg.id}`}
+                id={`${uid}-arc-${seg.id}`}
+                d={arcPath(cx, cy, labelR, a0 + inset, a1 - inset, flip)}
+                fill="none"
+              />
+            )
+          })}
         </defs>
+
+        {/* Fundo suave da área útil */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={outerR}
+          className="wheel-chart__disk"
+          pointerEvents="none"
+        />
 
         {levels.map((level) => (
           <circle
@@ -241,7 +275,6 @@ export function WheelChart({
         {segments.map((seg, i) => {
           const a0 = angleOf(i)
           const a1 = a0 + slice
-          const hit = ringSlice(cx, cy, innerR, outerR, a0, a1)
           const displayValue = displayScores[i] ?? 0
           const fillR =
             innerR + (Math.max(0, Math.min(displayValue, max)) / max) * (outerR - innerR)
@@ -253,6 +286,7 @@ export function WheelChart({
             <g
               key={seg.id}
               className={`wheel-chart__segment${pulsing ? ' is-pulsing' : ''}`}
+              style={{ ['--seg-color' as string]: seg.color }}
             >
               {showFill && (
                 <path
@@ -263,59 +297,56 @@ export function WheelChart({
                 />
               )}
 
-              <path
-                d={hit}
-                className={`wheel-chart__hit${readOnly ? ' wheel-chart__hit--readonly' : ''}`}
-                fill="transparent"
-                stroke="rgba(51, 25, 60, 0.22)"
-                strokeWidth={1}
-                onClick={(e) => handleSegmentClick(e, i, seg.id)}
-                onKeyDown={(e) => {
-                  if (readOnly || !onChange) return
-                  if (e.key === 'ArrowUp' || e.key === '+') {
-                    e.preventDefault()
-                    hapticTap()
-                    triggerPulse(seg.id)
-                    onChange(seg.id, Math.min(max, (seg.value || 0) + 1))
-                  }
-                  if (e.key === 'ArrowDown' || e.key === '-') {
-                    e.preventDefault()
-                    hapticTap()
-                    triggerPulse(seg.id)
-                    onChange(seg.id, Math.max(0, (seg.value || 0) - 1))
-                  }
-                }}
-                tabIndex={readOnly ? -1 : 0}
-                role={readOnly ? 'img' : 'slider'}
-                aria-label={`${seg.label}: ${seg.value} de ${max}`}
-                aria-valuemin={readOnly ? undefined : 0}
-                aria-valuemax={readOnly ? undefined : max}
-                aria-valuenow={readOnly ? undefined : seg.value}
-              />
-
               {levels.map((level) => {
-                const mid = a0 + slice / 2
-                const r = innerR + level * step - step * 0.15
-                const p = polar(cx, cy, r, mid)
-                const active = displayValue >= level - 0.15
+                const r0 = innerR + (level - 1) * step
+                const r1 = innerR + level * step
+                const cell = ringSlice(cx, cy, r0, r1, a0, a1)
+                const isFocusCell = level === 1
+
                 return (
-                  <circle
-                    key={`${seg.id}-lv-${level}`}
-                    cx={p.x}
-                    cy={p.y}
-                    r={active ? 2.2 : 1.4}
-                    className="wheel-chart__level-dot"
-                    fill={active ? seg.color : 'rgba(51,25,60,0.18)'}
-                    pointerEvents="none"
-                    opacity={active ? 0.9 : 0.45}
+                  <path
+                    key={`${seg.id}-cell-${level}`}
+                    d={cell}
+                    className={`wheel-chart__cell${readOnly ? ' wheel-chart__cell--readonly' : ''}`}
+                    fill="transparent"
+                    onClick={() => applyScore(seg.id, seg.value, level)}
+                    onKeyDown={
+                      isFocusCell
+                        ? (e) => {
+                            if (readOnly || !onChange) return
+                            if (e.key === 'ArrowUp' || e.key === '+') {
+                              e.preventDefault()
+                              hapticTap()
+                              triggerPulse(seg.id)
+                              onChange(seg.id, Math.min(max, (seg.value || 0) + 1))
+                            }
+                            if (e.key === 'ArrowDown' || e.key === '-') {
+                              e.preventDefault()
+                              hapticTap()
+                              triggerPulse(seg.id)
+                              onChange(seg.id, Math.max(0, (seg.value || 0) - 1))
+                            }
+                          }
+                        : undefined
+                    }
+                    tabIndex={readOnly || !isFocusCell ? -1 : 0}
+                    role={readOnly ? undefined : isFocusCell ? 'slider' : 'button'}
+                    aria-label={
+                      readOnly
+                        ? undefined
+                        : isFocusCell
+                          ? `${seg.label}: ${seg.value} de ${max}`
+                          : `${seg.label}, nota ${level}`
+                    }
+                    aria-valuemin={isFocusCell && !readOnly ? 0 : undefined}
+                    aria-valuemax={isFocusCell && !readOnly ? max : undefined}
+                    aria-valuenow={isFocusCell && !readOnly ? seg.value : undefined}
                   />
                 )
               })}
             </g>
           )
         })}
-
-        <circle cx={cx} cy={cy} r={innerR} className="wheel-chart__hub" />
 
         {segments.map((_, i) => {
           const a = angleOf(i)
@@ -342,27 +373,35 @@ export function WheelChart({
           pointerEvents="none"
         />
 
-        {segments.map((seg, i) => {
-          const mid = angleOf(i) + slice / 2
-          const p = polar(cx, cy, labelR, mid)
-          const cos = Math.cos(mid)
-          const anchor =
-            Math.abs(cos) < 0.25 ? 'middle' : cos > 0 ? 'start' : 'end'
-          return (
-            <text
-              key={`label-${seg.id}`}
-              x={p.x}
-              y={p.y}
-              textAnchor={anchor}
-              dominantBaseline="middle"
-              className="wheel-chart__label"
-              fill={seg.color}
-              pointerEvents="none"
+        <circle cx={cx} cy={cy} r={innerR} className="wheel-chart__hub" />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={innerR * 0.55}
+          className="wheel-chart__hub-inner"
+          pointerEvents="none"
+        />
+
+        {segments.map((seg) => (
+          <text
+            key={`label-${seg.id}`}
+            className="wheel-chart__label"
+            fill={seg.color}
+            fontSize={labelFontSize}
+            stroke="#efdfbe"
+            strokeWidth={labelHalo}
+            paintOrder="stroke fill"
+            pointerEvents="none"
+          >
+            <textPath
+              href={`#${uid}-arc-${seg.id}`}
+              startOffset="50%"
+              textAnchor="middle"
             >
-              {seg.label}
-            </text>
-          )
-        })}
+              {curvedLabel(seg)}
+            </textPath>
+          </text>
+        ))}
       </svg>
     </div>
   )
