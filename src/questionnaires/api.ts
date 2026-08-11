@@ -1,4 +1,5 @@
 import type { QuestionOption } from './types'
+import { apiUrl } from './apiBase'
 
 export type PublicQuestionnaire = {
   id: string
@@ -13,7 +14,7 @@ export type PublicQuestionnaire = {
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response
   try {
-    res = await fetch(`/api${path}`, {
+    res = await fetch(apiUrl(path), {
       ...init,
       headers: {
         'Content-Type': 'application/json',
@@ -22,7 +23,7 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
     })
   } catch {
     throw new Error(
-      'Não foi possível conectar à API. Rode `npm run dev` (web + api) ou `npm run dev:api`.',
+      'Não foi possível conectar à API. No local, rode `npm run dev`. Em produção, confira VITE_API_URL.',
     )
   }
 
@@ -34,7 +35,7 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(
       res.ok
         ? 'Resposta inválida da API.'
-        : 'API indisponível ou em porta errada. Confira se `npm run dev:api` está rodando na 8787.',
+        : 'API indisponível. Confira se o serviço no Render está no ar e se VITE_API_URL está correta.',
     )
   }
 

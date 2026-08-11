@@ -1,5 +1,6 @@
 import type { QuestionOption } from './types'
 import type { PublicQuestionnaire } from './api'
+import { apiUrl } from './apiBase'
 
 export type AdminSubmissionSummary = {
   id: string
@@ -35,7 +36,7 @@ async function adminApi<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAdminToken()
   let res: Response
   try {
-    res = await fetch(`/api${path}`, {
+    res = await fetch(apiUrl(path), {
       ...init,
       headers: {
         'Content-Type': 'application/json',
@@ -45,7 +46,7 @@ async function adminApi<T>(path: string, init?: RequestInit): Promise<T> {
     })
   } catch {
     throw new Error(
-      'Não foi possível conectar à API. Rode `npm run dev` (web + api) ou `npm run dev:api`.',
+      'Não foi possível conectar à API. No local, rode `npm run dev`. Em produção, confira VITE_API_URL.',
     )
   }
 
@@ -55,7 +56,7 @@ async function adminApi<T>(path: string, init?: RequestInit): Promise<T> {
     data = text ? (JSON.parse(text) as T & { error?: string }) : ({} as T & { error?: string })
   } catch {
     throw new Error(
-      'API indisponível ou em porta errada. Confira se `npm run dev:api` está rodando na 8787.',
+      'API indisponível. Confira se o serviço no Render está no ar e se VITE_API_URL está correta.',
     )
   }
 

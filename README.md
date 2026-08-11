@@ -80,7 +80,15 @@ npm run preview   # só o front estático
 - **Front:** Vercel (build estático do Vite)
 - **API:** Render (serviço Node com `npm start`)
 
-A API (`server/`) precisa estar no ar para `/questionarios` e `/painel`. Em produção, o front deve apontar `/api` para a URL do Render (rewrite no Vercel).
+Como estão em hosts diferentes, o front precisa da URL do Render:
+
+1. No **Vercel** → Project → Settings → Environment Variables  
+   `VITE_API_URL` = `https://seu-servico.onrender.com` (sem barra no final)
+2. No **Render** → Environment  
+   `CORS_ORIGIN` = URL do Vercel (ex.: `https://seu-app.vercel.app`)
+3. **Redeploy** o front no Vercel (variável `VITE_*` entra no build)
+
+No local, deixe `VITE_API_URL` vazio — continua usando `/api` + proxy do Vite.
 
 ### API no Render
 
