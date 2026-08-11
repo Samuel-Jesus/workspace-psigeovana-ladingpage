@@ -80,6 +80,8 @@ npm run preview   # só o front estático
 - **Front:** Vercel (build estático do Vite)
 - **API:** Render (serviço Node com `npm start`)
 
+O `vercel.json` reescreve rotas do React (`/questionarios`, `/painel`, etc.) para `index.html` — sem isso, refresh ou link direto dá **404**.
+
 Como estão em hosts diferentes, o front precisa da URL do Render:
 
 1. No **Vercel** → Project → Settings → Environment Variables  
