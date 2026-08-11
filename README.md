@@ -77,7 +77,19 @@ npm run build
 npm run preview   # só o front estático
 ```
 
-A API (`server/`) precisa ser publicada à parte (Node/hosting que rode `tsx`/`node` com as variáveis de ambiente). Em produção, aponte o front para a API ou use o mesmo domínio com reverse proxy em `/api`.
+- **Front:** Vercel (build estático do Vite)
+- **API:** Render (serviço Node com `npm start`)
+
+A API (`server/`) precisa estar no ar para `/questionarios` e `/painel`. Em produção, o front deve apontar `/api` para a URL do Render (rewrite no Vercel).
+
+### API no Render
+
+1. Web Service (Node), branch `main`
+2. **Build Command:** `npm install`
+3. **Start Command:** `npm start`
+4. Em **Environment**, as variáveis do `.env` (`DATABASE_URL`, `UNLOCK_SECRET`, `ADMIN_PASSWORD`, `CORS_ORIGIN` com a URL do Vercel, `API_HOST=0.0.0.0`, etc.)
+
+O Render define `PORT` automaticamente (o server já usa `PORT`).
 
 ## Estrutura
 

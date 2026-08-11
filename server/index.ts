@@ -301,7 +301,7 @@ function lanAddresses() {
   return out
 }
 
-const port = Number(process.env.API_PORT ?? 8787)
+const port = Number(process.env.PORT ?? process.env.API_PORT ?? 8787)
 const hostname = process.env.API_HOST ?? '0.0.0.0'
 serve({ fetch: app.fetch, port, hostname }, () => {
   console.log(`API questionários em http://localhost:${port}`)
