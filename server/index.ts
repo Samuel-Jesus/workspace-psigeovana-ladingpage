@@ -16,31 +16,39 @@ function requireAdmin(c: { req: { header: (name: string) => string | undefined }
   return verifyAdminToken(token)
 }
 
+function parseCorsOrigins(raw: string) {
+  return raw
+    .split(/[\s,]+/)
+    .map((s) => s.trim().replace(/\/$/, ''))
+    .filter(Boolean)
+}
+
 app.use(
   '/api/*',
   cors({
     origin: (origin) => {
-      const allowed = (
+      const allowed = parseCorsOrigins(
         process.env.CORS_ORIGIN ??
-        'http://localhost:5173,http://localhost:5199,http://127.0.0.1:5173'
+          'http://localhost:5173,http://localhost:5199,http://127.0.0.1:5173',
       )
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean)
 
       if (!origin) return allowed[0] ?? '*'
-      if (allowed.includes('*') || allowed.includes(origin)) return origin
+
+      const normalized = origin.replace(/\/$/, '')
+      if (allowed.includes('*') || allowed.includes(normalized) || allowed.includes(origin)) {
+        return origin
+      }
 
       // Rede local (celular na mesma Wi‑Fi)
       if (
         /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?$/.test(
-          origin,
+          normalized,
         )
       ) {
         return origin
       }
 
-      return allowed[0] ?? null
+      return null
     },
     allowMethods: ['GET', 'POST', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],

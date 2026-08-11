@@ -1,5 +1,10 @@
 import type { QuestionOption } from './types'
-import { apiUrl } from './apiBase'
+import {
+  apiConnectionError,
+  apiRequestError,
+  apiUnavailableError,
+  apiUrl,
+} from './apiBase'
 
 export type PublicQuestionnaire = {
   id: string
@@ -21,10 +26,8 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
         ...(init?.headers ?? {}),
       },
     })
-  } catch {
-    throw new Error(
-      'Não foi possível conectar à API. No local, rode `npm run dev`. Em produção, confira VITE_API_URL.',
-    )
+  } catch (cause) {
+    throw apiConnectionError(`fetch ${path}`, cause)
   }
 
   const text = await res.text()
@@ -32,15 +35,11 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     data = text ? (JSON.parse(text) as T & { error?: string }) : ({} as T & { error?: string })
   } catch {
-    throw new Error(
-      res.ok
-        ? 'Resposta inválida da API.'
-        : 'API indisponível. Confira se o serviço no Render está no ar e se VITE_API_URL está correta.',
-    )
+    throw apiUnavailableError(`parse ${path}`, res.status)
   }
 
   if (!res.ok) {
-    throw new Error(data.error ?? `Falha na requisição (${res.status})`)
+    throw apiRequestError(data.error, res.status)
   }
   return data
 }

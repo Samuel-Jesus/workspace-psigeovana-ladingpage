@@ -1,6 +1,11 @@
 import type { QuestionOption } from './types'
 import type { PublicQuestionnaire } from './api'
-import { apiUrl } from './apiBase'
+import {
+  apiConnectionError,
+  apiRequestError,
+  apiUnavailableError,
+  apiUrl,
+} from './apiBase'
 
 export type AdminSubmissionSummary = {
   id: string
@@ -44,10 +49,8 @@ async function adminApi<T>(path: string, init?: RequestInit): Promise<T> {
         ...(init?.headers ?? {}),
       },
     })
-  } catch {
-    throw new Error(
-      'Não foi possível conectar à API. No local, rode `npm run dev`. Em produção, confira VITE_API_URL.',
-    )
+  } catch (cause) {
+    throw apiConnectionError(`admin fetch ${path}`, cause)
   }
 
   const text = await res.text()
@@ -55,13 +58,11 @@ async function adminApi<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     data = text ? (JSON.parse(text) as T & { error?: string }) : ({} as T & { error?: string })
   } catch {
-    throw new Error(
-      'API indisponível. Confira se o serviço no Render está no ar e se VITE_API_URL está correta.',
-    )
+    throw apiUnavailableError(`admin parse ${path}`, res.status)
   }
 
   if (!res.ok) {
-    throw new Error(data.error ?? `Falha na requisição (${res.status})`)
+    throw apiRequestError(data.error, res.status)
   }
   return data
 }
