@@ -164,17 +164,22 @@ export function AdminPanelPage() {
             <Link to="/painel" className="q-back">
               ← Voltar ao histórico
             </Link>
-            <button
-              type="button"
-              className="admin-logout"
-              onClick={() => {
-                clearAdminToken()
-                setAuthed(false)
-                navigate('/painel')
-              }}
-            >
-              Sair
-            </button>
+            <div className="admin-toolbar__actions">
+              <Link to="/questionarios" className="q-btn q-btn--ghost">
+                Questionários
+              </Link>
+              <button
+                type="button"
+                className="admin-logout"
+                onClick={() => {
+                  clearAdminToken()
+                  setAuthed(false)
+                  navigate('/painel')
+                }}
+              >
+                Sair
+              </button>
+            </div>
           </div>
 
           {loading && <p className="admin-page__lead">Carregando…</p>}
@@ -244,22 +249,27 @@ export function AdminPanelPage() {
     <div className="admin-page">
       <LetterBackdrop variant="services" tone="light" />
       <div className="admin-page__inner">
-        <div className="admin-toolbar">
-          <div>
-            <span className="tag tag--light">Painel</span>
-            <h1 className="admin-page__title display">Histórico de respostas</h1>
+          <div className="admin-toolbar">
+            <div>
+              <span className="tag tag--light">Painel</span>
+              <h1 className="admin-page__title display">Histórico de respostas</h1>
+            </div>
+            <div className="admin-toolbar__actions">
+              <Link to="/questionarios" className="q-btn q-btn--ghost">
+                Questionários
+              </Link>
+              <button
+                type="button"
+                className="admin-logout"
+                onClick={() => {
+                  clearAdminToken()
+                  setAuthed(false)
+                }}
+              >
+                Sair
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            className="admin-logout"
-            onClick={() => {
-              clearAdminToken()
-              setAuthed(false)
-            }}
-          >
-            Sair
-          </button>
-        </div>
 
         <form
           className="admin-filters"

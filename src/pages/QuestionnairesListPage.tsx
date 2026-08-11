@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { listQuestionnaires, type PublicQuestionnaire } from '../questionnaires/api'
 import { LetterBackdrop } from '../components/LetterBackdrop'
+import { CopyLinkField } from '../components/questionnaire/CopyLinkField'
 import './Questionnaires.css'
 
 export function QuestionnairesListPage() {
@@ -28,6 +28,8 @@ export function QuestionnairesListPage() {
     }
   }, [])
 
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+
   return (
     <div className="q-page">
       <LetterBackdrop variant="services" tone="light" />
@@ -36,29 +38,37 @@ export function QuestionnairesListPage() {
           <span className="tag tag--light">Questionários</span>
           <h1 className="q-page__title display">Avaliações disponíveis</h1>
           <p className="q-page__lead">
-            Selecione um questionário. Você precisará do CPF e da senha
-            fornecida pela psicóloga para responder.
+            Copie o link do questionário e envie para a pessoa responder. Ela
+            precisará do CPF e da senha fornecida por você.
           </p>
         </header>
 
         {loading && <p className="q-page__lead">Carregando…</p>}
-        {error && <p className="q-unlock__error" role="alert">{error}</p>}
+        {error && (
+          <p className="q-unlock__error" role="alert">
+            {error}
+          </p>
+        )}
 
         {!loading && !error && (
           <ul className="q-list">
-            {items.map((q) => (
-              <li key={q.id}>
-                <Link to={`/questionarios/${q.slug}`} className="q-list__card">
-                  <span className="q-list__eyebrow">{q.subtitle}</span>
-                  <h2 className="q-list__title display">{q.title}</h2>
-                  <p className="q-list__desc">{q.description}</p>
-                  <span className="q-list__cta">Abrir questionário →</span>
-                </Link>
-              </li>
-            ))}
+            {items.map((q) => {
+              const url = `${origin}/questionarios/${q.slug}`
+              return (
+                <li key={q.id}>
+                  <article className="q-list__card q-list__card--static">
+                    <span className="q-list__eyebrow">{q.subtitle}</span>
+                    <h2 className="q-list__title display">{q.title}</h2>
+                    <p className="q-list__desc">{q.description}</p>
+                    <CopyLinkField url={url} label="Link para responder" />
+                  </article>
+                </li>
+              )
+            })}
           </ul>
         )}
       </div>
     </div>
   )
 }
+

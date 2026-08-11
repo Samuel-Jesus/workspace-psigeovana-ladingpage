@@ -81,10 +81,14 @@
   transition: transform 0.35s var(--ease), box-shadow 0.35s, background 0.3s;
 }
 
-.q-list__card:hover {
+.q-list__card:not(.q-list__card--static):hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-md);
   background: rgba(255, 255, 255, 0.78);
+}
+
+.q-list__card--static {
+  cursor: default;
 }
 
 .q-list__eyebrow {
@@ -114,6 +118,45 @@
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--lavanda-400);
+}
+
+.copy-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.copy-link__label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lavanda-400);
+}
+
+.copy-link__row {
+  display: flex;
+  gap: 0.55rem;
+  align-items: stretch;
+}
+
+.copy-link__input {
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--tinta);
+  background: var(--white);
+  border: 1px solid rgba(107, 74, 140, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.85rem;
+}
+
+.copy-link__btn {
+  width: auto;
+  flex-shrink: 0;
+  padding: 0.7rem 1.1rem;
+  font-size: 0.8rem;
 }
 
 /* Unlock */
@@ -612,6 +655,14 @@
 
   .q-confirm__actions .q-btn,
   .q-btn {
+    width: 100%;
+  }
+
+  .copy-link__row {
+    flex-direction: column;
+  }
+
+  .copy-link__btn {
     width: 100%;
   }
 
