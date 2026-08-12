@@ -123,13 +123,14 @@
 .copy-link {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.45rem;
+  margin-top: 0.15rem;
 }
 
 .copy-link__label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 500;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--lavanda-400);
 }
@@ -149,7 +150,7 @@
   background: var(--white);
   border: 1px solid rgba(107, 74, 140, 0.2);
   border-radius: var(--radius-sm);
-  padding: 0.7rem 0.85rem;
+  padding: 0.75rem 0.85rem;
 }
 
 .copy-link__btn {
@@ -564,8 +565,8 @@
 
 @media (max-width: 640px) {
   .q-page {
-    padding: 2rem 0.55rem 2.75rem;
-    padding-bottom: max(2.75rem, calc(1.25rem + env(safe-area-inset-bottom)));
+    padding: 1.75rem 0.9rem 2.5rem;
+    padding-bottom: max(2.5rem, calc(1.25rem + env(safe-area-inset-bottom)));
   }
 
   .q-page__inner,
@@ -658,12 +659,39 @@
     width: 100%;
   }
 
+  .q-page__header {
+    margin-bottom: 1.35rem;
+  }
+
+  .q-list {
+    gap: 0.9rem;
+  }
+
+  .q-list__card {
+    padding: 1.2rem 1rem 1.15rem;
+  }
+
+  .q-list__title {
+    font-size: 1.3rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .q-list__desc {
+    font-size: 0.88rem;
+    margin-bottom: 0.9rem;
+  }
+
   .copy-link__row {
     flex-direction: column;
   }
 
+  .copy-link__input {
+    display: none;
+  }
+
   .copy-link__btn {
     width: 100%;
+    min-height: 2.85rem;
   }
 
   .q-field input,

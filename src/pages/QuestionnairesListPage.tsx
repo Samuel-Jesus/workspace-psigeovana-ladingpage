@@ -38,8 +38,8 @@ export function QuestionnairesListPage() {
           <span className="tag tag--light">Questionários</span>
           <h1 className="q-page__title display">Avaliações disponíveis</h1>
           <p className="q-page__lead">
-            Copie o link do questionário e envie para a pessoa responder. Ela
-            precisará do CPF e da senha fornecida por você.
+            Copie o link e envie para a pessoa responder. Ela precisará do CPF
+            e da senha.
           </p>
         </header>
 

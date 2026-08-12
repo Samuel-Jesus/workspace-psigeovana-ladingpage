@@ -33,7 +33,7 @@ export function CopyLinkField({ url, label }: { url: string; label?: string }) {
           onFocus={(e) => e.currentTarget.select()}
         />
         <button type="button" className="q-btn q-btn--ghost copy-link__btn" onClick={() => void copy()}>
-          {copied ? 'Copiado' : 'Copiar'}
+          {copied ? 'Link copiado' : 'Copiar link'}
         </button>
       </div>
     </div>

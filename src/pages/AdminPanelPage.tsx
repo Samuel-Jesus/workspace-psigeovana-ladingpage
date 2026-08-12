@@ -166,7 +166,7 @@ export function AdminPanelPage() {
             </Link>
             <div className="admin-toolbar__actions">
               <Link to="/questionarios" className="q-btn q-btn--ghost">
-                Questionários
+                Ver questionários
               </Link>
               <button
                 type="button"
@@ -256,7 +256,7 @@ export function AdminPanelPage() {
             </div>
             <div className="admin-toolbar__actions">
               <Link to="/questionarios" className="q-btn q-btn--ghost">
-                Questionários
+                Ver questionários
               </Link>
               <button
                 type="button"
